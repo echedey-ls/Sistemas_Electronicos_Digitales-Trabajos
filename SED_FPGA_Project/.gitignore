@@ -8,6 +8,8 @@
 *
 !*/
 !.gitignore
+*.runs/
+*.cache/
 ###########################################################################
 ##	VIVADO
 ###########################################################################
@@ -25,9 +27,9 @@
 #.xci: synthesis and implemented not possible - you need to return back to the previous version to generate output products
 #.xci + .dcp: implementation possible but not re-synthesis
 #*.xci(www.spiritconsortium.org)
-!*.xci
+# !*.xci
 #*.dcp(checkpoint files)
-!*.dcp
+# !*.dcp
 !*.vds
 !*.pb
 #All bd comments and layout coordinates are stored within .ui
@@ -66,10 +68,6 @@
 #TCL - files
 #########
 !*.tcl
-#########
-#Journal - files
-#########
-!*.jou
 #########
 #Reports
 #########
