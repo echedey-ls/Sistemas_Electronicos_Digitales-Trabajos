@@ -1,5 +1,2 @@
 # Exclude Normativa folder
 /Normativa
-#Exclude Debug folder
-/SED_MICRO_Project/Debug
-
