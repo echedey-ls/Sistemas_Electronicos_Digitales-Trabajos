@@ -1,2 +1,6 @@
 # Exclude Normativa folder
 /Normativa
+
+# Exclude draw.io tmp files
+*.drawio.bkp
+*.drawio.dtmp
