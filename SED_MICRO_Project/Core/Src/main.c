@@ -44,6 +44,7 @@
 I2C_HandleTypeDef hi2c1;
 
 UART_HandleTypeDef huart4;
+DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
 enum FPGA_TABLE {
@@ -51,7 +52,7 @@ enum FPGA_TABLE {
 	BUSY = 0x01U,
 	AVAILABLE = 0x02U,
 	FINISHED = 0x03U,
-	ERROR = 0x80U
+	UNDEF = 0x80U
 };
 
 uint8_t FPGA_STATUS;
@@ -60,6 +61,7 @@ uint8_t FPGA_STATUS;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
@@ -102,11 +104,13 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
   lcd_init ();
   lcd_send_string("PRESS A BUTTON");
+  HAL_UART_RECIEVE_DMA(&huart4, &FPGA_STATUS, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -117,7 +121,7 @@ int main(void)
 	  lcd_put_cur(1, 0);
 	  lcd_send_string(buffer);
 	  lcd_send_string("                ");
-	  /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
@@ -234,6 +238,22 @@ static void MX_UART4_Init(void)
   /* USER CODE BEGIN UART4_Init 2 */
 
   /* USER CODE END UART4_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
 
 }
 
