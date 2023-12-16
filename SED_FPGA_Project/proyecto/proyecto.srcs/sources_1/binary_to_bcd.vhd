@@ -21,7 +21,7 @@
 --     Fixed small corner-case bug
 --   Version 1.2 1/16/2018 Scott Larson
 --     Fixed reset logic to include resetting the state machine
---    
+--
 --------------------------------------------------------------------------------
 
 LIBRARY ieee;
@@ -58,7 +58,7 @@ ARCHITECTURE logic OF binary_to_bcd IS
       c_out   : BUFFER  STD_LOGIC;
       bcd     : BUFFER  STD_LOGIC_VECTOR(3 DOWNTO 0));
   END COMPONENT binary_to_bcd_digit;
-  
+
 BEGIN
 
   PROCESS(reset_n, clk)
@@ -72,7 +72,7 @@ BEGIN
       state <= idle;                       --reset state machine
     ELSIF(clk'EVENT AND clk = '1') THEN  --system clock rising edge
       CASE state IS
-      
+
         WHEN idle =>                           --idle state
           IF(ena = '1') THEN                     --converter is enabled
             busy <= '1';                           --indicate conversion in progress
@@ -85,7 +85,7 @@ BEGIN
             converter_ena <= '0';                  --disable the converter
             state <= idle;                         --remain in idle state
           END IF;
-        
+
         WHEN convert =>                                   --convert state
           IF(bit_count < bits+1) THEN                       --not all bits shifted in
             bit_count := bit_count + 1;                       --increment bit counter
@@ -98,15 +98,15 @@ BEGIN
             bcd <= bcd_reg;                                   --output result
             state <= idle;                                    --return to idle state
           END IF;
-          
-      END CASE;  
+
+      END CASE;
     END IF;
   END PROCESS;
-  
+
   --instantiate the converter logic for the specified number of digits
   bcd_digits: FOR i IN 1 to digits GENERATE
     digit_0: binary_to_bcd_digit
-      PORT MAP (clk, reset_n, converter_ena, converter_inputs(i-1), converter_inputs(i), bcd_reg(i*4-1 DOWNTO i*4-4)); 
+      PORT MAP (clk, reset_n, converter_ena, converter_inputs(i-1), converter_inputs(i), bcd_reg(i*4-1 DOWNTO i*4-4));
   END GENERATE;
 
 END logic;

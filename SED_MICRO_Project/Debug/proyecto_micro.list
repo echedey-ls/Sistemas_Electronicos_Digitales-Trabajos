@@ -1452,15 +1452,15 @@ void SystemInit(void)
     .section  .text.Reset_Handler
   .weak  Reset_Handler
   .type  Reset_Handler, %function
-Reset_Handler:  
+Reset_Handler:
   ldr   sp, =_estack     /* set stack pointer */
  8000a90:	f8df d034 	ldr.w	sp, [pc, #52]	; 8000ac8 <LoopFillZerobss+0xe>
-  
+
 /* Call the clock system initialization function.*/
-  bl  SystemInit  
+  bl  SystemInit
  8000a94:	f7ff ffea 	bl	8000a6c <SystemInit>
 
-/* Copy the data segment initializers from flash to SRAM */  
+/* Copy the data segment initializers from flash to SRAM */
   ldr r0, =_sdata
  8000a98:	480c      	ldr	r0, [pc, #48]	; (8000acc <LoopFillZerobss+0x12>)
   ldr r1, =_edata
@@ -1491,7 +1491,7 @@ LoopCopyDataInit:
  8000aaa:	428c      	cmp	r4, r1
   bcc CopyDataInit
  8000aac:	d3f9      	bcc.n	8000aa2 <CopyDataInit>
-  
+
 /* Zero fill the bss segment. */
   ldr r2, =_sbss
  8000aae:	4a0a      	ldr	r2, [pc, #40]	; (8000ad8 <LoopFillZerobss+0x1e>)
@@ -1524,7 +1524,7 @@ LoopFillZerobss:
 /* Call the application's entry point.*/
   bl  main
  8000ac2:	f7ff fe29 	bl	8000718 <main>
-  bx  lr    
+  bx  lr
  8000ac6:	4770      	bx	lr
   ldr   sp, =_estack     /* set stack pointer */
  8000ac8:	20020000 	.word	0x20020000
@@ -1540,7 +1540,7 @@ LoopFillZerobss:
  8000adc:	20000098 	.word	0x20000098
 
 08000ae0 <ADC_IRQHandler>:
- * @retval None       
+ * @retval None
 */
     .section  .text.Default_Handler,"ax",%progbits
 Default_Handler:
@@ -1558,7 +1558,7 @@ HAL_StatusTypeDef HAL_Init(void)
 {
  8000ae4:	b580      	push	{r7, lr}
  8000ae6:	af00      	add	r7, sp, #0
-  /* Configure Flash prefetch, Instruction cache, Data cache */ 
+  /* Configure Flash prefetch, Instruction cache, Data cache */
 #if (INSTRUCTION_CACHE_ENABLE != 0U)
   __HAL_FLASH_INSTRUCTION_CACHE_ENABLE();
  8000ae8:	4b0e      	ldr	r3, [pc, #56]	; (8000b24 <HAL_Init+0x40>)
@@ -1676,7 +1676,7 @@ __weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
  8000b84:	20000018 	.word	0x20000018
 
 08000b88 <HAL_IncTick>:
- * @note This function is declared as __weak to be overwritten in case of other 
+ * @note This function is declared as __weak to be overwritten in case of other
   *      implementations in user file.
   * @retval None
   */
@@ -1703,7 +1703,7 @@ __weak void HAL_IncTick(void)
  8000bac:	20000094 	.word	0x20000094
 
 08000bb0 <HAL_GetTick>:
-  * @note This function is declared as __weak to be overwritten in case of other 
+  * @note This function is declared as __weak to be overwritten in case of other
   *       implementations in user file.
   * @retval tick value
   */
@@ -2018,8 +2018,8 @@ __STATIC_INLINE uint32_t SysTick_Config(uint32_t ticks)
  8000d70:	e000e010 	.word	0xe000e010
 
 08000d74 <HAL_NVIC_SetPriorityGrouping>:
-  * @note   When the NVIC_PriorityGroup_0 is selected, IRQ preemption is no more possible. 
-  *         The pending IRQ priority will be managed only by the subpriority. 
+  * @note   When the NVIC_PriorityGroup_0 is selected, IRQ preemption is no more possible.
+  *         The pending IRQ priority will be managed only by the subpriority.
   * @retval None
   */
 void HAL_NVIC_SetPriorityGrouping(uint32_t PriorityGroup)
@@ -2030,7 +2030,7 @@ void HAL_NVIC_SetPriorityGrouping(uint32_t PriorityGroup)
  8000d7a:	6078      	str	r0, [r7, #4]
   /* Check the parameters */
   assert_param(IS_NVIC_PRIORITY_GROUP(PriorityGroup));
-  
+
   /* Set the PRIGROUP[10:8] bits according to the PriorityGroup parameter value */
   NVIC_SetPriorityGrouping(PriorityGroup);
  8000d7c:	6878      	ldr	r0, [r7, #4]
@@ -2043,11 +2043,11 @@ void HAL_NVIC_SetPriorityGrouping(uint32_t PriorityGroup)
 
 08000d8a <HAL_NVIC_SetPriority>:
   *         This parameter can be a value between 0 and 15
-  *         A lower priority value indicates a higher priority.          
+  *         A lower priority value indicates a higher priority.
   * @retval None
   */
 void HAL_NVIC_SetPriority(IRQn_Type IRQn, uint32_t PreemptPriority, uint32_t SubPriority)
-{ 
+{
  8000d8a:	b580      	push	{r7, lr}
  8000d8c:	b086      	sub	sp, #24
  8000d8e:	af00      	add	r7, sp, #0
@@ -2058,15 +2058,15 @@ void HAL_NVIC_SetPriority(IRQn_Type IRQn, uint32_t PreemptPriority, uint32_t Sub
   uint32_t prioritygroup = 0x00U;
  8000d98:	2300      	movs	r3, #0
  8000d9a:	617b      	str	r3, [r7, #20]
-  
+
   /* Check the parameters */
   assert_param(IS_NVIC_SUB_PRIORITY(SubPriority));
   assert_param(IS_NVIC_PREEMPTION_PRIORITY(PreemptPriority));
-  
+
   prioritygroup = NVIC_GetPriorityGrouping();
  8000d9c:	f7ff ff5c 	bl	8000c58 <__NVIC_GetPriorityGrouping>
  8000da0:	6178      	str	r0, [r7, #20]
-  
+
   NVIC_SetPriority(IRQn, NVIC_EncodePriority(prioritygroup, PreemptPriority, SubPriority));
  8000da2:	687a      	ldr	r2, [r7, #4]
  8000da4:	68b9      	ldr	r1, [r7, #8]
@@ -2176,7 +2176,7 @@ void HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
         /* Check the Speed parameter */
         assert_param(IS_GPIO_SPEED(GPIO_Init->Speed));
         /* Configure the IO Speed */
-        temp = GPIOx->OSPEEDR; 
+        temp = GPIOx->OSPEEDR;
  8000e2e:	687b      	ldr	r3, [r7, #4]
  8000e30:	689b      	ldr	r3, [r3, #8]
  8000e32:	61bb      	str	r3, [r7, #24]
@@ -2241,7 +2241,7 @@ void HAL_GPIO_Init(GPIO_TypeDef  *GPIOx, GPIO_InitTypeDef *GPIO_Init)
       {
         /* Check the parameters */
         assert_param(IS_GPIO_PULL(GPIO_Init->Pull));
-        
+
         /* Activate the Pull-up or Pull down resistor for the current IO */
         temp = GPIOx->PUPDR;
  8000e9c:	687b      	ldr	r3, [r7, #4]
