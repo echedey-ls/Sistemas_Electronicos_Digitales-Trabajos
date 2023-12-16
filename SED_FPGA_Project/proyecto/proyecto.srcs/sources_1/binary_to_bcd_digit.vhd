@@ -17,7 +17,7 @@
 --   Version History
 --   Version 1.0 6/15/2017 Scott Larson
 --     Initial Public Release
---    
+--
 --------------------------------------------------------------------------------
 
 LIBRARY ieee;

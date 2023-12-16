@@ -2987,7 +2987,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .text.lcd_send_string
                 0x000000000800063c       0x2a ./Core/Src/i2c-lcd.o
                 0x000000000800063c                lcd_send_string
- *fill*         0x0000000008000666        0x2 
+ *fill*         0x0000000008000666        0x2
  .text.getKey   0x0000000008000668       0xb0 ./Core/Src/keypad.o
                 0x0000000008000668                getKey
  .text.main     0x0000000008000718       0x48 ./Core/Src/main.o
@@ -3002,7 +3002,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .text.Error_Handler
                 0x000000000800092c        0xa ./Core/Src/main.o
                 0x000000000800092c                Error_Handler
- *fill*         0x0000000008000936        0x2 
+ *fill*         0x0000000008000936        0x2
  .text.HAL_MspInit
                 0x0000000008000938       0x50 ./Core/Src/stm32f4xx_hal_msp.o
                 0x0000000008000938                HAL_MspInit
@@ -3126,7 +3126,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                 0x0000000008000ae0                I2C1_ER_IRQHandler
                 0x0000000008000ae0                DMA2_Stream6_IRQHandler
                 0x0000000008000ae0                DMA1_Stream3_IRQHandler
- *fill*         0x0000000008000ae2        0x2 
+ *fill*         0x0000000008000ae2        0x2
  .text.HAL_Init
                 0x0000000008000ae4       0x44 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
                 0x0000000008000ae4                HAL_Init
@@ -3150,7 +3150,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                 0x0000000008000c74       0x54 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
  .text.NVIC_EncodePriority
                 0x0000000008000cc8       0x66 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
- *fill*         0x0000000008000d2e        0x2 
+ *fill*         0x0000000008000d2e        0x2
  .text.SysTick_Config
                 0x0000000008000d30       0x44 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
  .text.HAL_NVIC_SetPriorityGrouping
@@ -3162,7 +3162,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .text.HAL_SYSTICK_Config
                 0x0000000008000dc2       0x18 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.o
                 0x0000000008000dc2                HAL_SYSTICK_Config
- *fill*         0x0000000008000dda        0x2 
+ *fill*         0x0000000008000dda        0x2
  .text.HAL_GPIO_Init
                 0x0000000008000ddc      0x338 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
                 0x0000000008000ddc                HAL_GPIO_Init
@@ -3172,7 +3172,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  .text.HAL_GPIO_WritePin
                 0x0000000008001144       0x32 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.o
                 0x0000000008001144                HAL_GPIO_WritePin
- *fill*         0x0000000008001176        0x2 
+ *fill*         0x0000000008001176        0x2
  .text.HAL_I2C_Init
                 0x0000000008001178      0x288 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.o
                 0x0000000008001178                HAL_I2C_Init
@@ -3191,7 +3191,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                 0x00000000080019c4       0x90 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.o
  .text.I2C_IsAcknowledgeFailed
                 0x0000000008001a54       0x5e ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.o
- *fill*         0x0000000008001ab2        0x2 
+ *fill*         0x0000000008001ab2        0x2
  .text.HAL_RCC_OscConfig
                 0x0000000008001ab4      0x4f0 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.o
                 0x0000000008001ab4                HAL_RCC_OscConfig
@@ -3243,10 +3243,10 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  *(.rodata)
  .rodata        0x000000000800242c       0x21 ./Core/Src/main.o
  *(.rodata*)
- *fill*         0x000000000800244d        0x3 
+ *fill*         0x000000000800244d        0x3
  .rodata.pads   0x0000000008002450       0x11 ./Core/Src/keypad.o
                 0x0000000008002450                pads
- *fill*         0x0000000008002461        0x3 
+ *fill*         0x0000000008002461        0x3
  .rodata.AHBPrescTable
                 0x0000000008002464       0x10 ./Core/Src/system_stm32f4xx.o
                 0x0000000008002464                AHBPrescTable
@@ -3304,7 +3304,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  *(.data*)
  .data.outall   0x0000000020000000        0x2 ./Core/Src/keypad.o
                 0x0000000020000000                outall
- *fill*         0x0000000020000002        0x2 
+ *fill*         0x0000000020000002        0x2
  .data.inps     0x0000000020000004        0x8 ./Core/Src/keypad.o
                 0x0000000020000004                inps
  .data.outs     0x000000002000000c        0x8 ./Core/Src/keypad.o
@@ -3321,7 +3321,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
  *(.RamFunc)
  *(.RamFunc*)
                 0x0000000020000020                . = ALIGN (0x4)
- *fill*         0x000000002000001d        0x3 
+ *fill*         0x000000002000001d        0x3
                 0x0000000020000020                _edata = .
                 0x00000000080024ac                _siccmram = LOADADDR (.ccmram)
 
@@ -3347,7 +3347,7 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                 0x000000002000003c                hi2c1
  .bss.buffer    0x0000000020000090        0x2 ./Core/Src/main.o
                 0x0000000020000090                buffer
- *fill*         0x0000000020000092        0x2 
+ *fill*         0x0000000020000092        0x2
  .bss.uwTick    0x0000000020000094        0x4 ./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.o
                 0x0000000020000094                uwTick
  *(COMMON)
@@ -3361,9 +3361,9 @@ LOAD D:/ST/STM32CubeIDE_1.14.0/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.ext
                 [!provide]                        PROVIDE (end = .)
                 0x0000000020000098                PROVIDE (_end = .)
                 0x0000000020000298                . = (. + _Min_Heap_Size)
- *fill*         0x0000000020000098      0x200 
+ *fill*         0x0000000020000098      0x200
                 0x0000000020000698                . = (. + _Min_Stack_Size)
- *fill*         0x0000000020000298      0x400 
+ *fill*         0x0000000020000298      0x400
                 0x0000000020000698                . = ALIGN (0x8)
 
 /DISCARD/

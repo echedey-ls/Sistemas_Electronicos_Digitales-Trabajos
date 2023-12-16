@@ -21,7 +21,7 @@ ENTITY TOP IS
     );
     CONSTANT c_CLK_FREQ : POSITIVE := 100_000_000; -- Hz
     CONSTANT c_UART_FREQ : POSITIVE := 10_000; -- Hz
-    CONSTANT c_7SEGMENTS_FREQ : POSITIVE := 30; -- Hz, refresh rate of each of the 7 segments 
+    CONSTANT c_7SEGMENTS_FREQ : POSITIVE := 30; -- Hz, refresh rate of each of the 7 segments
     CONSTANT c_USED_SEGMENTS : POSITIVE := 3;
 END TOP;
 

@@ -36,7 +36,7 @@ begin
           CE_OUT <= '1';
           count := count_range'high;
         end if;
-      end if;        
+      end if;
     end if;
   end process;
 end behavioral;

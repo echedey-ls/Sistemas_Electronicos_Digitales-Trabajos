@@ -1,0 +1,2 @@
+# This file provides required modules to run python scripts AND pre-commit hooks
+pre-commit
