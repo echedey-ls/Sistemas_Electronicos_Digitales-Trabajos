@@ -60,8 +60,8 @@ all: main-build
 main-build: proyecto_micro.elf secondary-outputs
 
 # Tool invocations
-proyecto_micro.elf proyecto_micro.map: $(OBJS) $(USER_OBJS) C:\GitHub\Sistemas_Electronicos_Digitales-Trabajos\SED_MICRO_Project\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "proyecto_micro.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\GitHub\Sistemas_Electronicos_Digitales-Trabajos\SED_MICRO_Project\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="proyecto_micro.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+proyecto_micro.elf proyecto_micro.map: $(OBJS) $(USER_OBJS) C:\Users\lucas\Documents\GitHub\Sistemas_Electronicos_Digitales-Trabajos\SED_MICRO_Project\STM32F407VGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "proyecto_micro.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\lucas\Documents\GitHub\Sistemas_Electronicos_Digitales-Trabajos\SED_MICRO_Project\STM32F407VGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="proyecto_micro.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

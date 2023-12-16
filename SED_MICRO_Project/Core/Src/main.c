@@ -110,7 +110,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
   lcd_init ();
   lcd_send_string("PRESS A BUTTON");
-  HAL_UART_RECIEVE_DMA(&huart4, &FPGA_STATUS, 1);
+  //This Callback will be called when the DMA receive call is complete
+  //There's also a Half complete callback for circular buffer functions
+  void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+  {
+      if (huart == &huart4){
+
+      }
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -121,6 +128,9 @@ int main(void)
 	  lcd_put_cur(1, 0);
 	  lcd_send_string(buffer);
 	  lcd_send_string("                ");
+	  //This call is non blocking and should be called when we want to
+	  //start updating FPGA_STATUS
+	  HAL_UART_Receive_DMA(&huart4, &FPGA_STATUS, 1);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
