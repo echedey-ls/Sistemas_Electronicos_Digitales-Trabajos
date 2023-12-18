@@ -17,7 +17,6 @@ END PACKAGE MACHINE_COMMON;
 
 PACKAGE BODY MACHINE_COMMON IS
     FUNCTION MachineStatus2Byte(st : IN MachineStatus) RETURN BYTE IS
-        VARIABLE ret_val : BYTE := (OTHERS => '0');
     BEGIN
         CASE st IS
             WHEN FAULT => return "01111111"; -- 0x7F

@@ -30,7 +30,6 @@ ARCHITECTURE arch_fsm OF FSM0 IS
         ENTRY_POINT,
         ISSUE_AVAILABLE_MSG,
         RX_WAIT_LOOP,
-        TIMER_TRIGGER,
         COUNTDOWN,
         FINISHED
     );
@@ -176,7 +175,7 @@ BEGIN ----------------------------------------
         END IF;
     END PROCESS;
 
-    nextstate_decod : PROCESS (i_CLK, CURRENT_STATE)
+    nextstate_decod : PROCESS (i_CLK)
     BEGIN
         NEXT_STATE <= CURRENT_STATE;
         CASE CURRENT_STATE IS
@@ -186,12 +185,10 @@ BEGIN ----------------------------------------
                 NEXT_STATE <= RX_WAIT_LOOP;
             WHEN RX_WAIT_LOOP =>
                 IF Recv_flag = '1' THEN
-                    NEXT_STATE <= TIMER_TRIGGER;
+                    NEXT_STATE <= COUNTDOWN;
                 END IF;
-            WHEN TIMER_TRIGGER =>
-                NEXT_STATE <= COUNTDOWN;
             WHEN COUNTDOWN =>
-                IF Timer_not_zero = '1' THEN
+                IF Timer_not_zero = '0' THEN
                     NEXT_STATE <= FINISHED;
                 END IF;
             WHEN FINISHED =>
@@ -201,7 +198,7 @@ BEGIN ----------------------------------------
         END CASE;
     END PROCESS nextstate_decod;
 
-    action_decod : PROCESS (i_CLK, CURRENT_STATE)
+    action_decod : PROCESS (i_CLK)
     BEGIN
         --! Default action values
         o_HEATER <= '0';
@@ -217,11 +214,11 @@ BEGIN ----------------------------------------
                 Send_flag <= '1';
                 Send_status_enum <= AVAILABLE;
             WHEN RX_WAIT_LOOP =>
-                --! Waits for Recv_flag = '1'
-                NULL;
-            WHEN TIMER_TRIGGER => -- 1 cycle duration
-                --! Load timer seconds and start countdown
-                Timer_load <= '1';
+                --! Waits for Recv_flag = '1', then
+                IF Recv_flag = '1' THEN
+                    --! Load timer seconds and start countdown
+                    Timer_load <= '1';
+                END IF;
             WHEN COUNTDOWN =>
                 --! Exits when timer gets to zero
                 o_HEATER <= '1';
