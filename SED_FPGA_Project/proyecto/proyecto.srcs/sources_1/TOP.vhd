@@ -15,13 +15,14 @@ ENTITY TOP IS
         CLK100MHZ : IN STD_LOGIC;
         CPU_RESETN : IN STD_LOGIC;
         SERIAL_IN : IN STD_LOGIC;
+        SERIAL_OUT : OUT STD_LOGIC;
         LED : OUT STD_LOGIC_VECTOR (15 DOWNTO 0);
         DIGIT_SEGMENTS : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
         DIGIT_DISABLE : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
     );
     CONSTANT c_CLK_FREQ : POSITIVE := 100_000_000; -- Hz
     CONSTANT c_UART_FREQ : POSITIVE := 10_000; -- Hz
-    CONSTANT c_7SEGMENTS_FREQ : POSITIVE := 30; -- Hz, refresh rate of each of the 7 segments
+    CONSTANT c_7SEGMENTS_FREQ : POSITIVE := 100; -- Hz, refresh rate of each of the 7 segments
     CONSTANT c_USED_SEGMENTS : POSITIVE := 3;
 END TOP;
 
@@ -36,6 +37,7 @@ ARCHITECTURE Behavioral OF TOP IS
             i_CLK : IN STD_LOGIC;
             i_RESET_N : IN STD_LOGIC;
             i_SERIAL_IN : IN STD_LOGIC;
+            o_SERIAL_OUT : OUT STD_LOGIC;
             o_RX_BRK_LED : OUT STD_LOGIC;
             o_HEATER : OUT STD_LOGIC;
             o8_REMAINING_SECS : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -71,6 +73,7 @@ BEGIN
         i_CLK => CLK100MHZ,
         i_RESET_N => CPU_RESETN,
         i_SERIAL_IN => SERIAL_IN,
+        o_SERIAL_OUT => SERIAL_OUT,
         o_RX_BRK_LED => LED(14),
         o_HEATER => LED(15),
         o8_REMAINING_SECS => REMAINING_SECS,

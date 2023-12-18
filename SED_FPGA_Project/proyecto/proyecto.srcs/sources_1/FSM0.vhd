@@ -16,6 +16,7 @@ ENTITY FSM0 IS
         i_CLK : IN STD_LOGIC;
         i_RESET_N : IN STD_LOGIC;
         i_SERIAL_IN : IN STD_LOGIC;
+        o_SERIAL_OUT : OUT STD_LOGIC;
         o_RX_BRK_LED : OUT STD_LOGIC;
         o_HEATER : OUT STD_LOGIC;
         o8_REMAINING_SECS : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
@@ -67,7 +68,8 @@ ARCHITECTURE arch_fsm OF FSM0 IS
     SIGNAL Recv_data : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
     SIGNAL Recv_brk : STD_LOGIC := '0';
     SIGNAL Send_flag : STD_LOGIC := '0';
-    SIGNAL Send_status : MachineStatus := FAULT;
+    SIGNAL Send_status_enum : MachineStatus := FAULT;
+    SIGNAL Send_status_byte : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
 
     --! COUNTDOWN TIMER
     COMPONENT e20_updown_cntr IS
@@ -115,12 +117,12 @@ BEGIN ----------------------------------------
     )
     PORT MAP(
         clk => i_CLK,
-        reset => i_RESET_N,
+        reset => NOT i_RESET_N,
 
         rxd => i_SERIAL_IN,
-        txd => OPEN,
+        txd => o_SERIAL_OUT,
 
-        tx_data => MachineStatus2Byte(Send_status),
+        tx_data => Send_status_byte,
         tx_req => Send_flag,
         tx_brk => '0',
         tx_busy => OPEN,
@@ -131,6 +133,7 @@ BEGIN ----------------------------------------
         rx_brk => Recv_brk,
         rx_err => OPEN
     );
+    Send_status_byte <= MachineStatus2Byte(Send_status_enum);
     o_RX_BRK_LED <= Recv_brk;
     o8_UART_DBG <= Recv_data WHEN Recv_flag = '1';
 
@@ -166,7 +169,7 @@ BEGIN ----------------------------------------
     --! State Machine
     state_register : PROCESS (i_RESET_N, i_CLK)
     BEGIN
-        IF i_RESET_N = '1' THEN
+        IF i_RESET_N = '0' THEN
             CURRENT_STATE <= ENTRY_POINT;
         ELSIF rising_edge(i_CLK) THEN
             CURRENT_STATE <= NEXT_STATE;
@@ -212,7 +215,7 @@ BEGIN ----------------------------------------
             WHEN ISSUE_AVAILABLE_MSG => -- 1 cycle duration
                 --! For this cycle, a send_flag and a send_status will be raised
                 Send_flag <= '1';
-                Send_status <= AVAILABLE;
+                Send_status_enum <= AVAILABLE;
             WHEN RX_WAIT_LOOP =>
                 --! Waits for Recv_flag = '1'
                 NULL;
@@ -228,11 +231,11 @@ BEGIN ----------------------------------------
                     -- Current code will send BUSY independently of what is received
                     -- TODO: implement cancel option here
                     Send_flag <= '1';
-                    Send_status <= BUSY;
+                    Send_status_enum <= BUSY;
                 END IF;
             WHEN FINISHED => -- 1 cycle duration
                 Send_flag <= '1';
-                Send_status <= FINISHED;
+                Send_status_enum <= FINISHED;
             WHEN OTHERS =>
                 NULL;
         END CASE;
