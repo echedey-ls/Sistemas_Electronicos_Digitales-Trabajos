@@ -4,9 +4,6 @@ USE IEEE.STD_LOGIC_1164.ALL;
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
 
--- TODO:
--- * LCDs
-
 -- Type declaration of enum with machine statuses and conversion to 8 bits
 USE WORK.MACHINE_COMMON.ALL;
 
