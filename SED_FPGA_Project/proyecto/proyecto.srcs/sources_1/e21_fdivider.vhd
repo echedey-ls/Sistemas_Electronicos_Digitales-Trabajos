@@ -1,42 +1,42 @@
-library IEEE;
-use IEEE.std_logic_1164.all;
+LIBRARY IEEE;
+USE IEEE.std_logic_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
 
-entity e21_fdivider is
-  generic (
-    MODULE: positive := 16
+ENTITY e21_fdivider IS
+  GENERIC (
+    MODULE : POSITIVE := 16
   );
-  port (
-    RESET : in  std_logic;
-    CLK   : in  std_logic;
-    CE_IN : in  std_logic;
-    CE_OUT: out std_logic
+  PORT (
+    RESET : IN STD_LOGIC;
+    CLK : IN STD_LOGIC;
+    CE_IN : IN STD_LOGIC;
+    CE_OUT : OUT STD_LOGIC
   );
-end e21_fdivider;
+END e21_fdivider;
 
-architecture behavioral of e21_fdivider is
+ARCHITECTURE behavioral OF e21_fdivider IS
 
-begin
-  process (RESET, CLK)
-    subtype count_range is integer range 0 to module - 1;
-    variable count: count_range;
-  begin
-    if RESET = '1' then
+BEGIN
+  PROCESS (RESET, CLK)
+    SUBTYPE count_range IS INTEGER RANGE 0 TO module - 1;
+    VARIABLE count : count_range;
+  BEGIN
+    IF RESET = '1' THEN
       count := count_range'high;
       CE_OUT <= '0';
-    elsif rising_edge(CLK) then
+    ELSIF rising_edge(CLK) THEN
       CE_OUT <= '0';
-      if CE_IN = '1' then
-        if count /= 0 then
+      IF CE_IN = '1' THEN
+        IF count /= 0 THEN
           count := count - 1;
-        else
+        ELSE
           CE_OUT <= '1';
           count := count_range'high;
-        end if;
-      end if;
-    end if;
-  end process;
-end behavioral;
+        END IF;
+      END IF;
+    END IF;
+  END PROCESS;
+END behavioral;
