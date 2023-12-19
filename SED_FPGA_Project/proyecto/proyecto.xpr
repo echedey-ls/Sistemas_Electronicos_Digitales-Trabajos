@@ -111,6 +111,12 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/char_decoder.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/e20_updown_cntr.vhd">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -129,12 +135,6 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/segments_manager.vhd">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PSRCDIR/sources_1/telecom_codes.vhd">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -142,6 +142,18 @@
         </FileInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/FSM0.vhd">
+        <FileInfo SFType="VHDL2008">
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/ProdType2fourChars.vhd">
+        <FileInfo SFType="VHDL2008">
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/segments_manager.vhd">
         <FileInfo SFType="VHDL2008">
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>

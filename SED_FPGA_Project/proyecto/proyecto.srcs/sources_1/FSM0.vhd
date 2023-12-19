@@ -2,7 +2,7 @@ LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 
 -- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
+USE IEEE.NUMERIC_STD.ALL;
 
 -- Type declaration of enum with machine statuses and conversion to 8 bits
 USE WORK.MACHINE_COMMON.ALL;
@@ -20,6 +20,7 @@ ENTITY FSM0 IS
         o_RX_BRK_LED : OUT STD_LOGIC;
         o_HEATER : OUT STD_LOGIC;
         o8_REMAINING_SECS : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+        o_PRODUCT_TYPE : OUT ProductType;
         o8_UART_DBG : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
     );
 END FSM0;
@@ -89,6 +90,7 @@ ARCHITECTURE arch_fsm OF FSM0 IS
     -- Signals
     SIGNAL Timer_not_zero : STD_LOGIC := '0';
     SIGNAL Timer_enable : STD_LOGIC := '0';
+    SIGNAL Timer_clear : STD_LOGIC := '0';
     SIGNAL Timer_load : STD_LOGIC := '0';
     SIGNAL Timer_remaining : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
 
@@ -142,12 +144,12 @@ BEGIN ----------------------------------------
         WIDTH => 8
     )
     PORT MAP(
-        CLR_N => i_RESET_N,
+        CLR_N => i_RESET_N AND NOT Timer_clear,
         CLK => i_CLK,
         UP => '0',
         CE_N => NOT Timer_enable,
         LOAD_N => NOT Timer_load,
-        J => Recv_data, -- Input
+        J => Recv_data(Recv_data'HIGH DOWNTO 2) & "11", -- Input
         ZERO_N => Timer_not_zero,
         Q => Timer_remaining -- Output
     );
@@ -191,6 +193,10 @@ BEGIN ----------------------------------------
                 IF Timer_not_zero = '0' THEN
                     NEXT_STATE <= FINISHED;
                 END IF;
+                IF UNSIGNED(Recv_data) = 255 THEN
+                    -- Requested CANCEL
+                    NEXT_STATE <= ENTRY_POINT;
+                END IF;
             WHEN FINISHED =>
                 NEXT_STATE <= ISSUE_AVAILABLE_MSG;
             WHEN OTHERS =>
@@ -204,20 +210,27 @@ BEGIN ----------------------------------------
         o_HEATER <= '0';
         Send_flag <= '0';
         Timer_load <= '0';
+        Timer_clear <= '0';
         Divider_enable <= '0';
         CASE CURRENT_STATE IS
             WHEN ENTRY_POINT =>
                 --! In case some initialization is required, or data send on power-up
-                NULL;
+                -- Reset timer
+                Timer_clear <= '1';
+                -- Do not show any product
+                o_PRODUCT_TYPE <= Bits2ProductType(external => '0', bits => "00");
             WHEN ISSUE_AVAILABLE_MSG => -- 1 cycle duration
                 --! For this cycle, a send_flag and a send_status will be raised
                 Send_flag <= '1';
                 Send_status_enum <= AVAILABLE;
+                o_PRODUCT_TYPE <= Bits2ProductType(external => '0', bits => "00");
             WHEN RX_WAIT_LOOP =>
                 --! Waits for Recv_flag = '1', then
                 IF Recv_flag = '1' THEN
-                    --! Load timer seconds and start countdown
+                    -- Load timer seconds and start countdown
                     Timer_load <= '1';
+                    -- Set the product type
+                    o_PRODUCT_TYPE <= Bits2ProductType(external => '1', bits => Recv_data(1 DOWNTO 0));
                 END IF;
             WHEN COUNTDOWN =>
                 --! Exits when timer gets to zero
@@ -226,9 +239,11 @@ BEGIN ----------------------------------------
                 -- Send BUSY if status requested
                 IF Recv_flag = '1' THEN -- Recv_flag lasts 1 cycle
                     -- Current code will send BUSY independently of what is received
-                    -- TODO: implement cancel option here
-                    Send_flag <= '1';
-                    Send_status_enum <= BUSY;
+                    IF UNSIGNED(Recv_data) /= 255 THEN
+                        -- Requested something that is not CANCEL
+                        Send_flag <= '1';
+                        Send_status_enum <= BUSY;
+                    END IF;
                 END IF;
             WHEN FINISHED => -- 1 cycle duration
                 Send_flag <= '1';

@@ -20,8 +20,13 @@ PACKAGE MACHINE_COMMON IS
 
     SUBTYPE BYTE IS STD_LOGIC_VECTOR(7 DOWNTO 0);
 
-    FUNCTION MachineStatus2Byte(st : IN MachineStatus) RETURN BYTE;
-    FUNCTION Bits2ProductType(bits : IN STD_LOGIC_VECTOR) RETURN ProductType;
+    FUNCTION MachineStatus2Byte(
+        st : IN MachineStatus
+    ) RETURN BYTE;
+    FUNCTION Bits2ProductType(
+        external : IN STD_LOGIC;
+        bits : IN STD_LOGIC_VECTOR
+    ) RETURN ProductType;
 END PACKAGE MACHINE_COMMON;
 
 PACKAGE BODY MACHINE_COMMON IS
@@ -36,14 +41,23 @@ PACKAGE BODY MACHINE_COMMON IS
         END CASE;
     END FUNCTION MachineStatus2Byte;
 
-    FUNCTION Bits2ProductType(bits : IN STD_LOGIC_VECTOR) RETURN ProductType IS
+    FUNCTION Bits2ProductType(
+        external : IN STD_LOGIC;
+        bits : IN STD_LOGIC_VECTOR
+    ) RETURN ProductType IS
     BEGIN
         ASSERT bits'length = 2;
-        CASE bits IS
-            WHEN "00" => RETURN COFFEE;
-            WHEN "01" => RETURN TEA;
-            WHEN "10" => RETURN MILK;
-            WHEN "11" => RETURN CHOCOLAT;
-        END CASE;
+        IF external = '1' THEN
+            --! External means that it comes from the UART RX port
+            CASE bits IS
+                WHEN "00" => RETURN COFFEE;
+                WHEN "01" => RETURN TEA;
+                WHEN "10" => RETURN MILK;
+                WHEN "11" => RETURN CHOCOLAT;
+            END CASE;
+        ELSE
+            --! Internal means that the code is from the FSM
+            RETURN NONE;
+        END IF;
     END FUNCTION Bits2ProductType;
 END PACKAGE BODY MACHINE_COMMON;

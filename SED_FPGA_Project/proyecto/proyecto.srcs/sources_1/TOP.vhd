@@ -1,14 +1,7 @@
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+USE WORK.MACHINE_COMMON.ALL;
 
 ENTITY TOP IS
     PORT (
@@ -23,7 +16,7 @@ ENTITY TOP IS
     CONSTANT c_CLK_FREQ : POSITIVE := 100_000_000; -- Hz
     CONSTANT c_UART_FREQ : POSITIVE := 10_000; -- Hz
     CONSTANT c_7SEGMENTS_FREQ : POSITIVE := 2_000; -- Hz, refresh rate of each of the 7 segments
-    CONSTANT c_USED_SEGMENTS : POSITIVE := 3;
+    CONSTANT c_USED_SEGMENTS : POSITIVE := 8;
 END TOP;
 
 ARCHITECTURE Behavioral OF TOP IS
@@ -41,6 +34,7 @@ ARCHITECTURE Behavioral OF TOP IS
             o_RX_BRK_LED : OUT STD_LOGIC;
             o_HEATER : OUT STD_LOGIC;
             o8_REMAINING_SECS : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+            o_PRODUCT_TYPE : OUT ProductType;
             o8_UART_DBG : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
         );
     END COMPONENT FSM0;
@@ -55,6 +49,7 @@ ARCHITECTURE Behavioral OF TOP IS
             i_CLK : IN STD_LOGIC;
             i_RESET_N : IN STD_LOGIC;
             i8_REMAINING_SECS : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+            i_PRODUCT_TYPE : IN ProductType;
             o7_DIGIT_SEGMENTS : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
             o8_DIGIT_DISABLE : OUT STD_LOGIC_VECTOR(g_USED_SEGMENTS - 1 DOWNTO 0)
         );
@@ -63,6 +58,8 @@ ARCHITECTURE Behavioral OF TOP IS
     --! Intermediate signals
     -- Remaining seconds of timer FSM --> 7-Segments Manager
     SIGNAL REMAINING_SECS : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
+    -- Type of product
+    SIGNAL PRODUCT_TYPE : ProductType;
 BEGIN
     Inst00_FSM0 : FSM0
     GENERIC MAP(
@@ -77,6 +74,7 @@ BEGIN
         o_RX_BRK_LED => LED(14),
         o_HEATER => LED(15),
         o8_REMAINING_SECS => REMAINING_SECS,
+        o_PRODUCT_TYPE => PRODUCT_TYPE,
         o8_UART_DBG => LED(7 DOWNTO 0)
     );
 
@@ -92,6 +90,7 @@ BEGIN
         i_CLK => CLK100MHZ,
         i_RESET_N => CPU_RESETN,
         i8_REMAINING_SECS => REMAINING_SECS,
+        i_PRODUCT_TYPE => PRODUCT_TYPE,
         o7_DIGIT_SEGMENTS => DIGIT_SEGMENTS,
         o8_DIGIT_DISABLE => DIGIT_DISABLE(c_USED_SEGMENTS - 1 DOWNTO 0)
     );

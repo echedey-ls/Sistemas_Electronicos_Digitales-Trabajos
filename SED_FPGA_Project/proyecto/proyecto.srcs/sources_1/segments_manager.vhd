@@ -1,6 +1,8 @@
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 
+USE WORK.MACHINE_COMMON.ALL;
+
 ENTITY SEGMENTS_MANAGER IS
     GENERIC (
         g_CLK_FREQ : POSITIVE := 100_000_000; -- Hz
@@ -11,6 +13,7 @@ ENTITY SEGMENTS_MANAGER IS
         i_CLK : IN STD_LOGIC;
         i_RESET_N : IN STD_LOGIC;
         i8_REMAINING_SECS : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+        i_PRODUCT_TYPE : IN ProductType;
         o7_DIGIT_SEGMENTS : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
         o8_DIGIT_DISABLE : OUT STD_LOGIC_VECTOR(g_USED_SEGMENTS - 1 DOWNTO 0)
     );
@@ -45,6 +48,24 @@ ARCHITECTURE rtl OF SEGMENTS_MANAGER IS
     END COMPONENT decoder;
     ALIAS BIN2SEG IS decoder;
 
+    --! Custom binary to 7 segment characters
+    COMPONENT char_decoder IS
+        PORT (
+            code : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+            led : OUT STD_LOGIC_VECTOR(6 DOWNTO 0)
+        );
+    END COMPONENT char_decoder;
+    TYPE character_array IS ARRAY(NATURAL RANGE <>) OF STD_LOGIC_VECTOR(3 DOWNTO 0);
+    SIGNAL char_array : character_array(3 DOWNTO 0);
+
+    --! From type enum to 4 chars
+    COMPONENT ProductType2Chars IS
+        PORT (
+            prod : IN ProductType;
+            code0, code1, code2, code3 : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
+        );
+    END COMPONENT ProductType2Chars;
+
     --! Freq. divider
     COMPONENT e21_fdivider IS
         GENERIC (
@@ -58,15 +79,14 @@ ARCHITECTURE rtl OF SEGMENTS_MANAGER IS
         );
     END COMPONENT e21_fdivider;
     -- Signals
-    SIGNAL bcd_digit_next : STD_LOGIC := '0';
+    SIGNAL next_segment_pulse : STD_LOGIC := '0';
 
     --! Local custom MUX
-    SUBTYPE bcd_bus IS STD_LOGIC_VECTOR(3 DOWNTO 0);
-    TYPE bcd_bus_vector IS ARRAY (NATURAL RANGE <>) OF bcd_bus;
+    SUBTYPE segments_bus IS STD_LOGIC_VECTOR(6 DOWNTO 0);
+    TYPE segments_bus_vector IS ARRAY (NATURAL RANGE <>) OF segments_bus;
 
-    SIGNAL bcd_codes_vector : bcd_bus_vector(g_USED_SEGMENTS - 1 DOWNTO 0) := (OTHERS => "0000");
-    SIGNAL enabled_digit : POSITIVE RANGE 0 TO g_USED_SEGMENTS - 1 := 1;
-    SIGNAL bcd_displayed : bcd_bus := "0000";
+    SIGNAL segments_codes_vector : segments_bus_vector(g_USED_SEGMENTS - 1 DOWNTO 0);
+    SIGNAL enabled_digit : NATURAL RANGE 0 TO g_USED_SEGMENTS - 1 := 1;
 BEGIN
     Inst00_binary_to_bcd : binary_to_bcd
     GENERIC MAP(
@@ -90,20 +110,17 @@ BEGIN
         RESET => NOT i_RESET_N,
         CLK => i_CLK,
         CE_IN => '1',
-        CE_OUT => bcd_digit_next
+        CE_OUT => next_segment_pulse
     );
 
     --! MUX or DIGIT SELECT algorithm
-    -- Map BCD lines to mux inputs
-    bcd_lines_gen : FOR i IN bcd_codes_vector'RANGE GENERATE
-        bcd_codes_vector(i) <= BCD_Representation(4 * i + 3 DOWNTO 4 * i);
-    END GENERATE bcd_lines_gen;
+    -- Map segments lines to mux inputs
     PROCESS (i_CLK, i_RESET_N)
     BEGIN
         IF i_RESET_N = '0' THEN
             enabled_digit <= 0;
         ELSIF rising_edge(i_CLK) THEN
-            IF bcd_digit_next = '1' THEN
+            IF next_segment_pulse = '1' THEN
                 enabled_digit <= enabled_digit + 1;
                 IF enabled_digit = g_USED_SEGMENTS THEN
                     enabled_digit <= 0;
@@ -117,8 +134,8 @@ BEGIN
         o8_DIGIT_DISABLE <= (OTHERS => '1');
         o8_DIGIT_DISABLE(enabled_digit) <= '0';
     END PROCESS;
-    -- Which BCD code to take
-    bcd_displayed <= bcd_codes_vector(enabled_digit);
+    -- Which segments to display
+    o7_DIGIT_SEGMENTS <= segments_codes_vector(enabled_digit);
 
     --! Detect & Start conversion on input change
     PROCESS (i_CLK, i_RESET_N, i8_REMAINING_SECS)
@@ -133,10 +150,32 @@ BEGIN
     Converter_start <= '0' WHEN Binary_input_reg = i8_REMAINING_SECS ELSE
         '1';
 
-    Inst00_bin2seg : bin2seg
-    PORT MAP(
-        code => bcd_displayed,
-        led => o7_DIGIT_SEGMENTS
-    );
+    codes2segments_decoders : FOR index IN g_USED_SEGMENTS - 1 DOWNTO 0 GENERATE
+        if_gen_segments :
+        IF index < 3 GENERATE
+            Inst0i_bin2seg : bin2seg
+            PORT MAP(
+                code => BCD_Representation(4 * index + 3 DOWNTO 4 * index),
+                led => segments_codes_vector(index)
+            );
+        ELSIF index = 3 GENERATE
+            segments_codes_vector(index) <= (OTHERS => '1');
+        ELSE GENERATE
+            Inst0i_char2seg : char_decoder
+            PORT MAP(
+                code => char_array(index - 4),
+                led => segments_codes_vector(index)
+            );
+        END GENERATE if_gen_segments;
+    END GENERATE;
 
+    -- Get product enum type
+    Inst00_Prod2Chars : ProductType2Chars
+    PORT MAP(
+        prod => i_PRODUCT_TYPE,
+        code0 => char_array(0),
+        code1 => char_array(1),
+        code2 => char_array(2),
+        code3 => char_array(3)
+    );
 END ARCHITECTURE rtl;
