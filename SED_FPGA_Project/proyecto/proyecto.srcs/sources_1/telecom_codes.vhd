@@ -10,9 +10,18 @@ PACKAGE MACHINE_COMMON IS
         FINISHED
     );
 
+    TYPE ProductType IS (
+        COFFEE,
+        TEA,
+        MILK,
+        CHOCOLAT,
+        NONE
+    );
+
     SUBTYPE BYTE IS STD_LOGIC_VECTOR(7 DOWNTO 0);
 
     FUNCTION MachineStatus2Byte(st : IN MachineStatus) RETURN BYTE;
+    FUNCTION Bits2ProductType(bits : IN STD_LOGIC_VECTOR) RETURN ProductType;
 END PACKAGE MACHINE_COMMON;
 
 PACKAGE BODY MACHINE_COMMON IS
@@ -26,4 +35,15 @@ PACKAGE BODY MACHINE_COMMON IS
             WHEN OTHERS => RETURN "10000000"; -- 0x80
         END CASE;
     END FUNCTION MachineStatus2Byte;
+
+    FUNCTION Bits2ProductType(bits : IN STD_LOGIC_VECTOR) RETURN ProductType IS
+    BEGIN
+        ASSERT bits'length = 2;
+        CASE bits IS
+            WHEN "00" => RETURN COFFEE;
+            WHEN "01" => RETURN TEA;
+            WHEN "10" => RETURN MILK;
+            WHEN "11" => RETURN CHOCOLAT;
+        END CASE;
+    END FUNCTION Bits2ProductType;
 END PACKAGE BODY MACHINE_COMMON;
