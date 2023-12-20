@@ -19,6 +19,9 @@ BEGIN
         "1001000" WHEN "0101", --H
         "1110001" WHEN "0110", --L
         "0000001" WHEN "0111", --O
-        "1110000" WHEN "1000", --t
-        "1111110" WHEN OTHERS;
+        "0011000" WHEN "1000", --P
+        "0100100" WHEN "1001", --S
+        "1110000" WHEN "1010", --t
+        "1111110" WHEN "1111", ---
+        "1111111" WHEN OTHERS;
 END ARCHITECTURE dataflow;

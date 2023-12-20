@@ -12,7 +12,7 @@ ARCHITECTURE dataflow OF decoder IS
 BEGIN
     WITH code SELECT
         led <=
-        "0000001" WHEN "0000",  -- 0
+        "0000001" WHEN "0000", -- 0
         "1001111" WHEN "0001",
         "0010010" WHEN "0010",
         "0000110" WHEN "0011",
@@ -21,6 +21,6 @@ BEGIN
         "0100000" WHEN "0110",
         "0001111" WHEN "0111",
         "0000000" WHEN "1000",
-        "0000100" WHEN "1001",  -- 9
+        "0000100" WHEN "1001", -- 9
         "1111110" WHEN OTHERS;
 END ARCHITECTURE dataflow;
