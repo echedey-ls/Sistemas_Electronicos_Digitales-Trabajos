@@ -1,5 +1,5 @@
 LIBRARY ieee;
-USE ieee.std_logic_1164.ALL;
+USE IEEE.STD_LOGIC_1164.ALL;
 USE ieee.numeric_std.ALL;
 
 ENTITY e20_updown_cntr IS
@@ -7,19 +7,19 @@ ENTITY e20_updown_cntr IS
     WIDTH : POSITIVE := 4
   );
   PORT (
-    CLR_N : IN STD_LOGIC;
-    CLK : IN STD_LOGIC;
-    UP : IN STD_LOGIC;
-    CE_N : IN STD_LOGIC;
-    LOAD_N : IN STD_LOGIC;
-    J : IN STD_LOGIC_VECTOR (WIDTH - 1 DOWNTO 0);
-    ZERO_N : OUT STD_LOGIC;
-    Q : OUT STD_LOGIC_VECTOR (WIDTH - 1 DOWNTO 0)
+    CLR_N : IN STD_ULOGIC;
+    CLK : IN STD_ULOGIC;
+    UP : IN STD_ULOGIC;
+    CE_N : IN STD_ULOGIC;
+    LOAD_N : IN STD_ULOGIC;
+    J : IN STD_ULOGIC_VECTOR (WIDTH - 1 DOWNTO 0);
+    ZERO_N : OUT STD_ULOGIC;
+    Q : OUT STD_ULOGIC_VECTOR (WIDTH - 1 DOWNTO 0)
   );
 END e20_updown_cntr;
 
 ARCHITECTURE behavioral OF e20_updown_cntr IS
-  SIGNAL q_i : unsigned(Q'RANGE);
+  SIGNAL q_i : UNRESOLVED_UNSIGNED(Q'RANGE);
 BEGIN
   PROCESS (CLR_N, CLK, LOAD_N, J)
   BEGIN
@@ -37,7 +37,7 @@ BEGIN
       END IF;
     END IF;
   END PROCESS;
-  Q <= STD_LOGIC_VECTOR(q_i);
+  Q <= STD_ULOGIC_VECTOR(q_i);
   ZERO_N <= '0' WHEN q_i = 0 ELSE
     '1';
 END behavioral;

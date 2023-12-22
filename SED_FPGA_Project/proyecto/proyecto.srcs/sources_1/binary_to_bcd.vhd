@@ -25,38 +25,38 @@
 --------------------------------------------------------------------------------
 
 LIBRARY ieee;
-USE ieee.std_logic_1164.all;
+USE IEEE.STD_LOGIC_1164.ALL;
 
 ENTITY binary_to_bcd IS
   GENERIC(
     bits   : INTEGER := 10;  --size of the binary input numbers in bits
     digits : INTEGER := 3);  --number of BCD digits to convert to
   PORT(
-    clk     : IN    STD_LOGIC;                             --system clock
-    reset_n : IN    STD_LOGIC;                             --active low asynchronus reset
-    ena     : IN    STD_LOGIC;                             --latches in new binary number and starts conversion
-    binary  : IN    STD_LOGIC_VECTOR(bits-1 DOWNTO 0);     --binary number to convert
-    busy    : OUT  STD_LOGIC;                              --indicates conversion in progress
-    bcd     : OUT  STD_LOGIC_VECTOR(digits*4-1 DOWNTO 0)); --resulting BCD number
+    clk     : IN    STD_ULOGIC;                             --system clock
+    reset_n : IN    STD_ULOGIC;                             --active low asynchronus reset
+    ena     : IN    STD_ULOGIC;                             --latches in new binary number and starts conversion
+    binary  : IN    STD_ULOGIC_VECTOR(bits-1 DOWNTO 0);     --binary number to convert
+    busy    : OUT  STD_ULOGIC;                              --indicates conversion in progress
+    bcd     : OUT  STD_ULOGIC_VECTOR(digits*4-1 DOWNTO 0)); --resulting BCD number
 END binary_to_bcd;
 
 ARCHITECTURE logic OF binary_to_bcd IS
   TYPE    machine IS(idle, convert);                                --needed states
   SIGNAL  state            : machine;                               --state machine
-  SIGNAL  binary_reg       : STD_LOGIC_VECTOR(bits-1 DOWNTO 0);     --latched in binary number
-  SIGNAL  bcd_reg          : STD_LOGIC_VECTOR(digits*4-1 DOWNTO 0); --bcd result register
-  SIGNAL  converter_ena    : STD_LOGIC;                             --enable into each BCD single digit converter
-  SIGNAL  converter_inputs : STD_LOGIC_VECTOR(digits DOWNTO 0);     --inputs into each BCD single digit converter
+  SIGNAL  binary_reg       : STD_ULOGIC_VECTOR(bits-1 DOWNTO 0);     --latched in binary number
+  SIGNAL  bcd_reg          : STD_ULOGIC_VECTOR(digits*4-1 DOWNTO 0); --bcd result register
+  SIGNAL  converter_ena    : STD_ULOGIC;                             --enable into each BCD single digit converter
+  SIGNAL  converter_inputs : STD_ULOGIC_VECTOR(digits DOWNTO 0);     --inputs into each BCD single digit converter
 
   --binary to BCD single digit converter component
   COMPONENT binary_to_bcd_digit IS
     PORT(
-      clk     : IN      STD_LOGIC;
-      reset_n : IN      STD_LOGIC;
-      ena     : IN      STD_LOGIC;
-      binary  : IN      STD_LOGIC;
-      c_out   : BUFFER  STD_LOGIC;
-      bcd     : BUFFER  STD_LOGIC_VECTOR(3 DOWNTO 0));
+      clk     : IN      STD_ULOGIC;
+      reset_n : IN      STD_ULOGIC;
+      ena     : IN      STD_ULOGIC;
+      binary  : IN      STD_ULOGIC;
+      c_out   : BUFFER  STD_ULOGIC;
+      bcd     : BUFFER  STD_ULOGIC_VECTOR(3 DOWNTO 0));
   END COMPONENT binary_to_bcd_digit;
 
 BEGIN

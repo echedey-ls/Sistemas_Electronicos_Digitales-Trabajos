@@ -1,6 +1,6 @@
 -- Set of utils for the FPGA <> MICROCONTROLLER interface
 LIBRARY IEEE;
-USE IEEE.std_logic_1164.ALL;
+USE IEEE.STD_LOGIC_1164.ALL;
 
 PACKAGE MACHINE_COMMON IS
     TYPE MachineStatus IS (
@@ -11,21 +11,24 @@ PACKAGE MACHINE_COMMON IS
     );
 
     TYPE ProductType IS (
+        NONE,
+        DASHES,
+        CANCEL,
         COFFEE,
         TEA,
         MILK,
-        CHOCOLAT,
-        NONE
+        CHOCOLAT
     );
 
-    SUBTYPE BYTE IS STD_LOGIC_VECTOR(7 DOWNTO 0);
+    SUBTYPE BYTE IS STD_ULOGIC_VECTOR(7 DOWNTO 0);
 
+    --! Convert Machine Status to 8bits to UART TX
     FUNCTION MachineStatus2Byte(
         st : IN MachineStatus
     ) RETURN BYTE;
+    --! Two LSBs input from UART define the Product Type
     FUNCTION Bits2ProductType(
-        external : IN STD_LOGIC;
-        bits : IN STD_LOGIC_VECTOR
+        bits : IN STD_ULOGIC_VECTOR
     ) RETURN ProductType;
 END PACKAGE MACHINE_COMMON;
 
@@ -42,22 +45,15 @@ PACKAGE BODY MACHINE_COMMON IS
     END FUNCTION MachineStatus2Byte;
 
     FUNCTION Bits2ProductType(
-        external : IN STD_LOGIC;
-        bits : IN STD_LOGIC_VECTOR
+        bits : IN STD_ULOGIC_VECTOR
     ) RETURN ProductType IS
     BEGIN
         ASSERT bits'length = 2;
-        IF external = '1' THEN
-            --! External means that it comes from the UART RX port
-            CASE bits IS
-                WHEN "00" => RETURN COFFEE;
-                WHEN "01" => RETURN TEA;
-                WHEN "10" => RETURN MILK;
-                WHEN "11" => RETURN CHOCOLAT;
-            END CASE;
-        ELSE
-            --! Internal means that the code is from the FSM
-            RETURN NONE;
-        END IF;
+        CASE bits IS
+            WHEN "00" => RETURN COFFEE;
+            WHEN "01" => RETURN TEA;
+            WHEN "10" => RETURN MILK;
+            WHEN "11" => RETURN CHOCOLAT;
+        END CASE;
     END FUNCTION Bits2ProductType;
 END PACKAGE BODY MACHINE_COMMON;

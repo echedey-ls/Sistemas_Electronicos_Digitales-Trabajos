@@ -1,5 +1,5 @@
 LIBRARY IEEE;
-USE IEEE.std_logic_1164.ALL;
+USE IEEE.STD_LOGIC_1164.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -10,10 +10,10 @@ ENTITY e21_fdivider IS
     MODULE : POSITIVE := 16
   );
   PORT (
-    RESET : IN STD_LOGIC;
-    CLK : IN STD_LOGIC;
-    CE_IN : IN STD_LOGIC;
-    CE_OUT : OUT STD_LOGIC
+    RESET : IN STD_ULOGIC;
+    CLK : IN STD_ULOGIC;
+    CE_IN : IN STD_ULOGIC;
+    CE_OUT : OUT STD_ULOGIC
   );
 END e21_fdivider;
 

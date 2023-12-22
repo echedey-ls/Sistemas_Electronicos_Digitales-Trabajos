@@ -1,12 +1,12 @@
 LIBRARY IEEE;
-USE IEEE.std_logic_1164.ALL;
+USE IEEE.STD_LOGIC_1164.ALL;
 
 USE WORK.MACHINE_COMMON.ALL;
 
 ENTITY ProductType2Chars IS
     PORT (
         prod : IN ProductType;
-        code0, code1, code2, code3 : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
+        code0, code1, code2, code3 : OUT STD_ULOGIC_VECTOR(3 DOWNTO 0)
     );
 END ENTITY ProductType2Chars;
 
@@ -19,7 +19,8 @@ BEGIN
         "0010" WHEN CHOCOLAT,
         "1001" WHEN CANCEL,
         "1111" WHEN DASHES,
-        "0000" WHEN NONE; -- Do not show anything
+        "0000" WHEN NONE,
+        "0000" WHEN OTHERS; -- Do not show anything
     WITH prod SELECT code2 <= -- second char
         "0001" WHEN COFFEE,
         "0011" WHEN TEA,
@@ -27,7 +28,8 @@ BEGIN
         "0101" WHEN CHOCOLAT,
         "1010" WHEN CANCEL,
         "1111" WHEN DASHES,
-        "0000" WHEN NONE; -- Do not show anything
+        "0000" WHEN NONE,
+        "0000" WHEN OTHERS; -- Do not show anything
     WITH prod SELECT code1 <= -- third char
         "0100" WHEN COFFEE,
         "0000" WHEN TEA,
@@ -35,7 +37,8 @@ BEGIN
         "0111" WHEN CHOCOLAT,
         "0111" WHEN CANCEL,
         "1111" WHEN DASHES,
-        "0000" WHEN NONE; -- Do not show anything
+        "0000" WHEN NONE,
+        "0000" WHEN OTHERS; -- Do not show anything
     WITH prod SELECT code0 <= -- fourth char
         "0011" WHEN COFFEE,
         "0000" WHEN TEA,
@@ -43,5 +46,6 @@ BEGIN
         "0010" WHEN CHOCOLAT,
         "1000" WHEN CANCEL,
         "1111" WHEN DASHES,
-        "0000" WHEN NONE; -- Do not show anything
+        "0000" WHEN NONE,
+        "0000" WHEN OTHERS; -- Do not show anything
 END ARCHITECTURE rtl;

@@ -10,12 +10,12 @@ ENTITY SEGMENTS_MANAGER IS
         g_USED_SEGMENTS : POSITIVE := 3
     );
     PORT (
-        i_CLK : IN STD_LOGIC;
-        i_RESET_N : IN STD_LOGIC;
-        i8_REMAINING_SECS : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+        i_CLK : IN STD_ULOGIC;
+        i_RESET_N : IN STD_ULOGIC;
+        i8_REMAINING_SECS : IN STD_ULOGIC_VECTOR(7 DOWNTO 0);
         i_PRODUCT_TYPE : IN ProductType;
-        o7_DIGIT_SEGMENTS : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
-        o8_DIGIT_DISABLE : OUT STD_LOGIC_VECTOR(g_USED_SEGMENTS - 1 DOWNTO 0)
+        o7_DIGIT_SEGMENTS : OUT STD_ULOGIC_VECTOR(6 DOWNTO 0);
+        o8_DIGIT_DISABLE : OUT STD_ULOGIC_VECTOR(g_USED_SEGMENTS - 1 DOWNTO 0)
     );
 END ENTITY SEGMENTS_MANAGER;
 
@@ -26,24 +26,24 @@ ARCHITECTURE rtl OF SEGMENTS_MANAGER IS
             bits : INTEGER := 10; --size of the binary input numbers in bits
             digits : INTEGER := 3); --number of BCD digits to convert to
         PORT (
-            clk : IN STD_LOGIC; --system clock
-            reset_n : IN STD_LOGIC; --active low asynchronus reset
-            ena : IN STD_LOGIC; --latches in new binary number and starts conversion
-            binary : IN STD_LOGIC_VECTOR(bits - 1 DOWNTO 0); --binary number to convert
-            busy : OUT STD_LOGIC; --indicates conversion in progress
-            bcd : OUT STD_LOGIC_VECTOR(digits * 4 - 1 DOWNTO 0)); --resulting BCD number
+            clk : IN STD_ULOGIC; --system clock
+            reset_n : IN STD_ULOGIC; --active low asynchronus reset
+            ena : IN STD_ULOGIC; --latches in new binary number and starts conversion
+            binary : IN STD_ULOGIC_VECTOR(bits - 1 DOWNTO 0); --binary number to convert
+            busy : OUT STD_ULOGIC; --indicates conversion in progress
+            bcd : OUT STD_ULOGIC_VECTOR(digits * 4 - 1 DOWNTO 0)); --resulting BCD number
     END COMPONENT binary_to_bcd;
     -- Signals
-    SIGNAL Converter_start : STD_LOGIC := '0'; -- starts conversion with '1' on 1 cycle (same as ena)
-    --SIGNAL Converter_busy : STD_LOGIC := '0';
-    SIGNAL BCD_Representation : STD_LOGIC_VECTOR(g_USED_SEGMENTS * 4 - 1 DOWNTO 0);
-    SIGNAL Binary_input_reg : STD_LOGIC_VECTOR(i8_REMAINING_SECS'RANGE) := (OTHERS => '0');
+    SIGNAL Converter_start : STD_ULOGIC := '0'; -- starts conversion with '1' on 1 cycle (same as ena)
+    --SIGNAL Converter_busy : STD_ULOGIC := '0';
+    SIGNAL BCD_Representation : STD_ULOGIC_VECTOR(g_USED_SEGMENTS * 4 - 1 DOWNTO 0);
+    SIGNAL Binary_input_reg : STD_ULOGIC_VECTOR(i8_REMAINING_SECS'RANGE) := (OTHERS => '0');
 
     --! BCD/Binary 1 digit to a 7 segment display
     COMPONENT decoder IS
         PORT (
-            code : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-            led : OUT STD_LOGIC_VECTOR(6 DOWNTO 0)
+            code : IN STD_ULOGIC_VECTOR(3 DOWNTO 0);
+            led : OUT STD_ULOGIC_VECTOR(6 DOWNTO 0)
         );
     END COMPONENT decoder;
     ALIAS BIN2SEG IS decoder;
@@ -51,18 +51,18 @@ ARCHITECTURE rtl OF SEGMENTS_MANAGER IS
     --! Custom binary to 7 segment characters
     COMPONENT char_decoder IS
         PORT (
-            code : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-            led : OUT STD_LOGIC_VECTOR(6 DOWNTO 0)
+            code : IN STD_ULOGIC_VECTOR(3 DOWNTO 0);
+            led : OUT STD_ULOGIC_VECTOR(6 DOWNTO 0)
         );
     END COMPONENT char_decoder;
-    TYPE character_array IS ARRAY(NATURAL RANGE <>) OF STD_LOGIC_VECTOR(3 DOWNTO 0);
+    TYPE character_array IS ARRAY(NATURAL RANGE <>) OF STD_ULOGIC_VECTOR(3 DOWNTO 0);
     SIGNAL char_array : character_array(3 DOWNTO 0);
 
     --! From type enum to 4 chars
     COMPONENT ProductType2Chars IS
         PORT (
             prod : IN ProductType;
-            code0, code1, code2, code3 : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
+            code0, code1, code2, code3 : OUT STD_ULOGIC_VECTOR(3 DOWNTO 0)
         );
     END COMPONENT ProductType2Chars;
 
@@ -72,17 +72,17 @@ ARCHITECTURE rtl OF SEGMENTS_MANAGER IS
             MODULE : POSITIVE := 16
         );
         PORT (
-            RESET : IN STD_LOGIC;
-            CLK : IN STD_LOGIC;
-            CE_IN : IN STD_LOGIC;
-            CE_OUT : OUT STD_LOGIC
+            RESET : IN STD_ULOGIC;
+            CLK : IN STD_ULOGIC;
+            CE_IN : IN STD_ULOGIC;
+            CE_OUT : OUT STD_ULOGIC
         );
     END COMPONENT e21_fdivider;
     -- Signals
-    SIGNAL next_segment_pulse : STD_LOGIC := '0';
+    SIGNAL next_segment_pulse : STD_ULOGIC := '0';
 
     --! Local custom MUX
-    SUBTYPE segments_bus IS STD_LOGIC_VECTOR(6 DOWNTO 0);
+    SUBTYPE segments_bus IS STD_ULOGIC_VECTOR(6 DOWNTO 0);
     TYPE segments_bus_vector IS ARRAY (NATURAL RANGE <>) OF segments_bus;
 
     SIGNAL segments_codes_vector : segments_bus_vector(g_USED_SEGMENTS - 1 DOWNTO 0);
@@ -129,7 +129,7 @@ BEGIN
         END IF;
     END PROCESS;
     -- Which digit to activate
-    PROCESS (i_CLK)
+    PROCESS (i_CLK, enabled_digit)
     BEGIN
         o8_DIGIT_DISABLE <= (OTHERS => '1');
         o8_DIGIT_DISABLE(enabled_digit) <= '0';

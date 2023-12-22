@@ -1,10 +1,10 @@
 LIBRARY ieee;
-USE ieee.std_logic_1164.ALL;
+USE IEEE.STD_LOGIC_1164.ALL;
 
 ENTITY decoder IS
     PORT (
-        code : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-        led : OUT STD_LOGIC_VECTOR(6 DOWNTO 0)
+        code : IN STD_ULOGIC_VECTOR(3 DOWNTO 0);
+        led : OUT STD_ULOGIC_VECTOR(6 DOWNTO 0)
     );
 END ENTITY decoder;
 
