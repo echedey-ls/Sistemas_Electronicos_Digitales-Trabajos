@@ -19,8 +19,8 @@ BEGIN
         "0010" WHEN CHOCOLAT,
         "1001" WHEN CANCEL,
         "1111" WHEN DASHES,
-        "0000" WHEN NONE,
-        "0000" WHEN OTHERS; -- Do not show anything
+        "0000" WHEN NONE, -- Do not show anything
+        "0111" WHEN OTHERS;
     WITH prod SELECT code2 <= -- second char
         "0001" WHEN COFFEE,
         "0011" WHEN TEA,
@@ -28,8 +28,8 @@ BEGIN
         "0101" WHEN CHOCOLAT,
         "1010" WHEN CANCEL,
         "1111" WHEN DASHES,
-        "0000" WHEN NONE,
-        "0000" WHEN OTHERS; -- Do not show anything
+        "0000" WHEN NONE, -- Do not show anything
+        "1010" WHEN OTHERS;
     WITH prod SELECT code1 <= -- third char
         "0100" WHEN COFFEE,
         "0000" WHEN TEA,
@@ -37,8 +37,8 @@ BEGIN
         "0111" WHEN CHOCOLAT,
         "0111" WHEN CANCEL,
         "1111" WHEN DASHES,
-        "0000" WHEN NONE,
-        "0000" WHEN OTHERS; -- Do not show anything
+        "0000" WHEN NONE, -- Do not show anything
+        "0011" WHEN OTHERS;
     WITH prod SELECT code0 <= -- fourth char
         "0011" WHEN COFFEE,
         "0000" WHEN TEA,
@@ -46,6 +46,6 @@ BEGIN
         "0010" WHEN CHOCOLAT,
         "1000" WHEN CANCEL,
         "1111" WHEN DASHES,
-        "0000" WHEN NONE,
-        "0000" WHEN OTHERS; -- Do not show anything
+        "0000" WHEN NONE, -- Do not show anything
+        "1001" WHEN OTHERS;
 END ARCHITECTURE rtl;

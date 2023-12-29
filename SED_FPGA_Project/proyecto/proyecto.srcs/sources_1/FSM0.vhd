@@ -22,6 +22,7 @@ ENTITY FSM0 IS
         o_HEATER : OUT STD_ULOGIC;
         o8_REMAINING_SECS : OUT STD_ULOGIC_VECTOR(7 DOWNTO 0);
         o_PRODUCT_STR : OUT ProductType;
+        o_PRODUCT_LOAD : OUT STD_ULOGIC;
         oo_UART_DBG : OUT STD_ULOGIC_VECTOR
     );
 END FSM0;
@@ -257,8 +258,8 @@ BEGIN ----------------------------------------
                 oo_UART_DBG(7) <= '1';
                 IF Timer_has_finished = '1' THEN
                     NEXT_STATE <= ORDER_FINISHED;
-                -- ELSIF Any_CMD_Cancel = '1' THEN
-                --     NEXT_STATE <= ORDER_CANCELLED;
+                ELSIF Any_CMD_Cancel = '1' THEN
+                    NEXT_STATE <= ORDER_CANCELLED;
                 END IF;
             WHEN ORDER_CANCELLED =>
                 oo_UART_DBG(8) <= '1';
@@ -280,6 +281,7 @@ BEGIN ----------------------------------------
         Timer_load <= '0';
         Timer_clear <= '0';
         Do_countdown <= '0';
+        o_PRODUCT_LOAD <= '0';
         display_txt := display_txt; -- Text to display latch
         oo_UART_DBG(4 DOWNTO 0) <= (OTHERS => '0');
         CASE CURRENT_STATE IS
@@ -290,6 +292,7 @@ BEGIN ----------------------------------------
                 -- Last_prod_cancelled <= '0';
                 Do_countdown <= '0';
                 Timer_clear <= '1';
+                o_PRODUCT_LOAD <= '1';
                 display_txt := DASHES;
             WHEN WAIT_FOR_CMD =>
                 oo_UART_DBG(1) <= '1';
@@ -298,6 +301,7 @@ BEGIN ----------------------------------------
                 IF Recv_CMD_Product_Request = '1' THEN
                     Timer_load <= '1';
                     display_txt := CMD_RX_prod_type;
+                    o_PRODUCT_LOAD <= '1';
                 END IF;
             WHEN COUNT_DOWN =>
                 oo_UART_DBG(2) <= '1';

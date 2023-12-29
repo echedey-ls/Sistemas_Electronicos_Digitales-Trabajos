@@ -37,6 +37,7 @@ ARCHITECTURE Behavioral OF TOP IS
             o_HEATER : OUT STD_LOGIC;
             o8_REMAINING_SECS : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
             o_PRODUCT_STR : OUT ProductType;
+            o_PRODUCT_LOAD : OUT STD_LOGIC;
             oo_UART_DBG : OUT STD_LOGIC_VECTOR
         );
     END COMPONENT FSM0;
@@ -52,6 +53,7 @@ ARCHITECTURE Behavioral OF TOP IS
             i_RESET_N : IN STD_LOGIC;
             i8_REMAINING_SECS : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
             i_PRODUCT_TYPE : IN ProductType;
+            i_LOAD_PROD_TYPE : IN STD_LOGIC;
             o7_DIGIT_SEGMENTS : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
             o8_DIGIT_DISABLE : OUT STD_LOGIC_VECTOR(g_USED_SEGMENTS - 1 DOWNTO 0)
         );
@@ -71,6 +73,7 @@ ARCHITECTURE Behavioral OF TOP IS
     SIGNAL REMAINING_SECS : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
     -- Type of product
     SIGNAL PRODUCT_TYPE : ProductType;
+    SIGNAL PRODUCT_TYPE_LOAD : STD_LOGIC := '0';
     -- CANCEL Button / Synced signal & Edge
     SIGNAL CANCEL_BTN_LEVEL : STD_LOGIC := '0';
 BEGIN
@@ -97,6 +100,7 @@ BEGIN
         o_HEATER => LED(15),
         o8_REMAINING_SECS => REMAINING_SECS,
         o_PRODUCT_STR => PRODUCT_TYPE,
+        o_PRODUCT_LOAD => PRODUCT_TYPE_LOAD,
         oo_UART_DBG => LED(13 DOWNTO 0)
     );
 
@@ -111,6 +115,7 @@ BEGIN
         i_RESET_N => CPU_RESETN,
         i8_REMAINING_SECS => REMAINING_SECS,
         i_PRODUCT_TYPE => PRODUCT_TYPE,
+        i_LOAD_PROD_TYPE => PRODUCT_TYPE_LOAD,
         o7_DIGIT_SEGMENTS => DIGIT_SEGMENTS,
         o8_DIGIT_DISABLE => DIGIT_DISABLE(c_USED_SEGMENTS - 1 DOWNTO 0)
     );
