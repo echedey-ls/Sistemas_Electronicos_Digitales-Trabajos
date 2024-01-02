@@ -25,6 +25,7 @@ public:
 		HAL_UART_Receive_DMA(UART_DIR, status, 1);
 	}
 	void Send(uint8_t msg){HAL_UART_Transmit(UART_DIR, msg, 1, 5);}
+	//void SendProd( msg){HAL_UART_Transmit(UART_DIR, msg, 1, 5);}
 	uint8_t getRawStatus(){return status;}
 	UART_HandleTypeDef * getUART_DIR() {return UART_DIR;}
 	FPGA_TABLE getStatus(){
