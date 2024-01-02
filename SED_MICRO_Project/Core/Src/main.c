@@ -47,15 +47,15 @@ UART_HandleTypeDef huart4;
 DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
-enum FPGA_TABLE {
+/*enum FPGA_TABLE {
 	FAULT = 0x7FU,
 	BUSY = 0x01U,
 	AVAILABLE = 0x02U,
 	FINISHED = 0x03U,
 	UNDEF = 0x80U
-};
+};*/
 
-uint8_t FPGA_STATUS;
+//uint8_t FPGA_STATUS;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
