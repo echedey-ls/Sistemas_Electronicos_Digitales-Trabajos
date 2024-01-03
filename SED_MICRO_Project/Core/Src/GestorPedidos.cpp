@@ -7,7 +7,7 @@
 
 #include "GestorPedidos.hpp"
 
-uint8_t huart_p2Cafetera_index(UART_HandleTypeDef * uart_dir){
+uint8_t GestorPedidos::huart_p2Cafetera_index(UART_HandleTypeDef * uart_dir){
 	for (uint8_t i=0; i<cafetera_vec.size(); i++){
 		if(uart_dir == cafetera_vec[i].getUART_DIR()){
 			return i;
@@ -23,7 +23,7 @@ uint8_t Prod2msg(Prod_t prod, uint8_t time){
 }
 
 //si no hay máquinas devuelve 1, si todas están ocupadas, devuelve 2, si todo ok 0
-uint8_t HacerPedido(Pedido p){
+uint8_t GestorPedidos::HacerPedido(Pedido p){
 	if (cafetera_vec.size()==0){
 		delete p;
 		Pedido::last_id-1;
@@ -56,7 +56,7 @@ uint8_t HacerPedido(Pedido p){
 	}
 }
 
-uint8_t HacerPedido(Pedido_t prod, uint8_t time){
+uint8_t GestorPedidos::HacerPedido(Pedido_t prod, uint8_t time){
 	Pedido p(prod, time);
 	return this->HacerPedido(p);
 }
