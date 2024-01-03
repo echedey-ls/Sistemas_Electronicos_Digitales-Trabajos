@@ -440,7 +440,7 @@ void f_busy(){
 	 * para cambiar a DONE
 	 * (o a ERR)
 	 */
-	//No hay interrupción, tendremos que acceder a Gestor
+	//No hay interrupción, tendremos que acceder a GestorPedidos y la caf correspondiente
 
 	HAL_Delay(10000); //Quitar
 	state = DONE;     //Quitar
