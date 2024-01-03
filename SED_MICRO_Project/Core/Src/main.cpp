@@ -68,7 +68,7 @@ enum class MCU_STATES{
 	ERR
 };
 
-MCU_STATES state = IDLE;
+MCU_STATES state = MCU_STATES::IDLE;
 
 void f_idle();
 void f_select();
@@ -356,7 +356,7 @@ void f_idle(){
 	lcd_put_cur(1, 0);
 	lcd_send_string("PARA CONTINUAR");
 	if(getKey()){
-		state = SELECT;
+		state = MCU_STATES::SELECT;
 		lcd_clear();
 	}
 }
