@@ -57,7 +57,7 @@ enum class FPGA_STATUS {
 	FINISHED = 0x03,
 	UNDEF = 0x80
 };
-FPGA_STATUS fpga_status_h4 = UNDEF;
+FPGA_STATUS fpga_status_h4 = FPGA_STATUS::UNDEF;
 
 enum class MCU_STATES{
 	IDLE,
