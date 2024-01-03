@@ -24,6 +24,8 @@
 #include "GestorPedidos.hpp"
 #include "cafetera.hpp"
 #include "Pedido.hpp"
+
+#include <string>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,16 +50,16 @@ UART_HandleTypeDef huart4;
 DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
-enum FPGA_STATUS {
+enum class FPGA_STATUS {
 	FAULT = 0x7F,
 	BUSY = 0x01,
 	AVAILABLE = 0x02,
 	FINISHED = 0x03,
 	UNDEF = 0x80
 };
-enum FPGA_STATUS fpga_status_h4 = UNDEF;
+FPGA_STATUS fpga_status_h4 = UNDEF;
 
-enum states{
+enum class MCU_STATES{
 	IDLE,
 	SELECT,
 	CONFIRM,
@@ -66,7 +68,7 @@ enum states{
 	ERR
 };
 
-enum states state = IDLE;
+MCU_STATES state = IDLE;
 
 void f_idle();
 void f_select();
@@ -157,22 +159,22 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  /*BEGIN Máquina de Estados*/
 	  	  switch(state){
-	  	  case IDLE:
+	  	  case MCU_STATES::IDLE:
 	  		  f_idle();
 	  		  break;
-	  	  case SELECT:
+	  	  case MCU_STATES::SELECT:
 	  		  f_select();
 	  		  break;
-	  	  case CONFIRM:
+	  	  case MCU_STATES::CONFIRM:
 	  		  f_confirm();
 	  		  break;
-	  	  case BUSY:
+	  	  case MCU_STATES::BUSY:
 	  		  f_busy();
 	  		  break;
-	  	  case DONE:
+	  	  case MCU_STATES::DONE:
 	  		  f_done();
 	  		  break;
-	  	  case ERR:
+	  	  case MCU_STATES::ERR:
 	  		  f_error();
 	  		  break;
 	  	  }
@@ -402,10 +404,10 @@ void f_confirm(){
 	lcd_send_string("CONFIRMA CON A");
 	char conf = pads[getKey()];
 	if(conf == 'A'){
-		state = BUSY;
+		state = MCU_STATES::BUSY;
 		lcd_clear();
 	}else if(conf == 'B'){
-		state = SELECT;
+		state = MCU_STATES::SELECT;
 		lcd_clear();
 	}
 }
@@ -425,7 +427,7 @@ void f_busy(){
 	 */
 
 	HAL_Delay(10000); //Quitar
-	state = DONE;     //Quitar
+	state = MCU_STATES::DONE;     //Quitar
 
 	lcd_clear();
 }
@@ -436,7 +438,7 @@ void f_done(){
 	lcd_put_cur(1, 0);
 	lcd_send_string("COGER SU PRODUCTO");
 	if(pads[getKey()] == 'A'){
-		state = IDLE;
+		state = MCU_STATES::IDLE;
 		lcd_clear();
 	}
 }
