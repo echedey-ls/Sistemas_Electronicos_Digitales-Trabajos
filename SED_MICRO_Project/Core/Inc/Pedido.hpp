@@ -10,7 +10,7 @@
 
 #include "stm32f4xx_hal.h"
 
-enum Pedido_t{
+enum Pedido_t:uint8_t{
 	CAFE = 0x00,
 	TE = 0x01,
 	LECHE = 0x02,

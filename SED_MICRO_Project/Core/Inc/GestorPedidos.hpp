@@ -14,7 +14,7 @@
 
 class GestorPedidos{
 	std::vector<Cafetera> cafetera_vec;
-	std::vector<Pedido> active_orders;
+	std::vector<Pedido*> active_orders;
 public:
 	GestorPedidos(std::vector<Cafetera> v):cafetera_vec(v){}
 	GestorPedidos(Cafetera caf1, Cafetera caf2, Cafetera caf3);

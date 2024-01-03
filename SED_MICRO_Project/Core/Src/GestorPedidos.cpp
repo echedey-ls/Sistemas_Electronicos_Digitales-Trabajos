@@ -6,6 +6,7 @@
  */
 
 #include "GestorPedidos.hpp"
+#include "Pedido.hpp"
 
 GestorPedidos::GestorPedidos(Cafetera caf1, Cafetera caf2=Cafetera(nullptr), Cafetera caf3=Cafetera(nullptr)){
 	cafetera_vec.push_back(caf1);
@@ -25,12 +26,29 @@ uint8_t GestorPedidos::huart_p2Cafetera_index(UART_HandleTypeDef * uart_dir){
 			return i;
 		}
 	}
+	return cafetera_vec.size();//error
 }
 
 //traducción a nuestro protocolo propio de UART
-uint8_t Prod2msg(Prod_t prod, uint8_t time){
-	uint8_t msg = time & b11111100;
-	msg = msg | prod;
+uint8_t Prod2msg(const Pedido_t prod, uint8_t time){
+	uint8_t msg = time & 0b11111100;
+	switch(prod){
+	case Pedido_t::CAFE:
+		msg = msg | Pedido_t::CAFE;
+		break;
+	case Pedido_t::CHOCOLATE:
+		msg = msg | Pedido_t::CHOCOLATE;
+		break;
+	case Pedido_t::LECHE:
+		msg = msg | Pedido_t::LECHE;
+		break;
+	case Pedido_t::TE:
+		msg = msg | Pedido_t::TE;
+		break;
+	default:
+		return 0x04; //error
+		break;
+	}
 	return msg;
 }
 
@@ -61,9 +79,9 @@ uint8_t GestorPedidos::HacerPedido(Pedido* p){
 	}
 	//en este caso, mandamos el pedido a la máquina
 	else {
-		p.setAssignedCaf(caf_index);//le asignamos la primera libre
+		p->setAssignedCaf(caf_index);//le asignamos la primera libre
 		active_orders.push_back(p); //añadimos el pedido a los que están siendo atendidos
-	 	cafetera_vec(caf_index).Send(Prod2msg(p.getProduct(), p.getTime()));
+	 	cafetera_vec[caf_index].Send(Prod2msg(p->getProduct(), p->getTime()));
 	 	return 0;
 	}
 }
