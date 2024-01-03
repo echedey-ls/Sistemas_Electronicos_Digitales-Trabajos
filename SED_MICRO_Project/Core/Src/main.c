@@ -47,13 +47,14 @@ UART_HandleTypeDef huart4;
 DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
-/*enum FPGA_TABLE {
-	FAULT = 0x7FU,
-	BUSY = 0x01U,
-	AVAILABLE = 0x02U,
-	FINISHED = 0x03U,
-	UNDEF = 0x80U
-};*/
+enum FPGA_STATUS {
+	FAULT = 0x7F,
+	BUSY = 0x01,
+	AVAILABLE = 0x02,
+	FINISHED = 0x03,
+	UNDEF = 0x80
+};
+enum FPGA_STATUS fpga_status_h4 = UNDEF;
 
 //uint8_t FPGA_STATUS;
 /* USER CODE END PV */
@@ -130,7 +131,7 @@ int main(void)
 	  lcd_send_string("                ");
 	  //This call is non blocking and should be called when we want to
 	  //start updating FPGA_STATUS
-	  HAL_UART_Receive_DMA(&huart4, &FPGA_STATUS, 1);
+	  HAL_UART_Receive_DMA(&huart4, &fpga_status_h4, 1);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
