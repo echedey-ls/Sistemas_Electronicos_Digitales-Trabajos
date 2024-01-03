@@ -23,6 +23,9 @@
 /* USER CODE BEGIN Includes */
 #include "i2c-lcd.h"
 #include "keypad.h"
+#include "GestorPedidos.hpp"
+#include "cafetera.hpp"
+#include "Pedido.hpp"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,6 +59,24 @@ enum FPGA_STATUS {
 };
 enum FPGA_STATUS fpga_status_h4 = UNDEF;
 
+enum states{
+	IDLE,
+	SELECT,
+	CONFIRM,
+	BUSY,
+	DONE,
+	ERR
+};
+
+enum states state = IDLE;
+
+void f_idle();
+void f_select();
+void f_confirm();
+void f_busy();
+void f_done();
+void f_error();
+
 //uint8_t FPGA_STATUS;
 /* USER CODE END PV */
 
@@ -84,7 +105,9 @@ char buffer[2];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	//Al crear la cafetera se pone ya a escuchar con DMA por &huart4
+	GestorPedidos Gestor(Cafetera(&huart4));
+	//HAL_UART_Receive_DMA(&huart4, &fpga_status_h4, 1);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -131,10 +154,31 @@ int main(void)
 	  lcd_send_string("                ");
 	  //This call is non blocking and should be called when we want to
 	  //start updating FPGA_STATUS
-	  HAL_UART_Receive_DMA(&huart4, &fpga_status_h4, 1);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  /*BEGIN Máquina de Estados*/
+	  	  switch(state){
+	  	  case IDLE:
+	  		  f_idle();
+	  		  break;
+	  	  case SELECT:
+	  		  f_select();
+	  		  break;
+	  	  case CONFIRM:
+	  		  f_confirm();
+	  		  break;
+	  	  case BUSY:
+	  		  f_busy();
+	  		  break;
+	  	  case DONE:
+	  		  f_done();
+	  		  break;
+	  	  case ERR:
+	  		  f_error();
+	  		  break;
+	  	  }
+
   }
   /* USER CODE END 3 */
 }
@@ -305,6 +349,103 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/*Funciones Máquina de Estado*/
+void f_idle(){
+	lcd_put_cur(0, 0);
+	lcd_send_string("PRESIONE UN BOTON");
+	lcd_put_cur(1, 0);
+	lcd_send_string("PARA CONTINUAR");
+	if(getKey()){
+		state = SELECT;
+		lcd_clear();
+	}
+}
+
+void f_select(){
+	static int sel;
+	sel = getKey();
+	static char cof;
+	cof = pads[sel];
+	lcd_put_cur(0, 0);
+	lcd_send_string("SELECCIONE UN");
+	lcd_put_cur(1, 0);
+	lcd_send_string("PRODUCTO");
+	switch(cof){
+	case '1':
+		strcpy(coffee, "Cafe");
+		state = CONFIRM;
+		lcd_clear();
+		break;
+	case '2':
+		strcpy(coffee, "Leche");
+		state = CONFIRM;
+		lcd_clear();
+		break;
+	case '3':
+		strcpy(coffee, "Te");
+		state = CONFIRM;
+		lcd_clear();
+		break;
+	case '4':
+		strcpy(coffee, "Chocolate");
+		state = CONFIRM;
+		lcd_clear();
+		break;
+	default:
+		break;
+	}
+
+}
+
+void f_confirm(){
+	lcd_put_cur(0, 0);
+	lcd_send_string(coffee);
+	lcd_put_cur(1, 0);
+	lcd_send_string("CONFIRMA CON A");
+	char conf = pads[getKey()];
+	if(conf == 'A'){
+		state = BUSY;
+		lcd_clear();
+	}else if(conf == 'B'){
+		state = SELECT;
+		lcd_clear();
+	}
+}
+
+void f_busy(){
+	//Gestor.HacerPedido(...)
+
+	lcd_put_cur(0, 0);
+	lcd_send_string("PREPARANDO...");
+	lcd_put_cur(1, 0);
+	lcd_send_string("ESPERE UN POCO");
+
+	/* Falta
+	 * Interrupción de FPGA
+	 * para cambiar a DONE
+	 * (o a ERR)
+	 */
+
+	HAL_Delay(10000); //Quitar
+	state = DONE;     //Quitar
+
+	lcd_clear();
+}
+
+void f_done(){
+	lcd_put_cur(0, 0);
+	lcd_send_string("LISTO! PUEDE");
+	lcd_put_cur(1, 0);
+	lcd_send_string("COGER SU PRODUCTO");
+	if(pads[getKey()] == 'A'){
+		state = IDLE;
+		lcd_clear();
+	}
+}
+
+void f_error(){
+	//FALTA
+}
 
 /* USER CODE END 4 */
 
