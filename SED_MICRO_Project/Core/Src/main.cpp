@@ -95,7 +95,15 @@ static void MX_UART4_Init(void);
 int row=0;
 int col=0;
 
-char buffer[2];
+char coffee[20];
+
+const char pads[] = {'\0',
+		'1', '4', '7', '*',
+		'2', '5', '8', '0',
+		'3', '6', '9', '#',
+		'A', 'B', 'C', 'D'
+};
+
 /* USER CODE END 0 */
 
 /**
@@ -132,8 +140,13 @@ int main(void)
   MX_I2C1_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
+
   lcd_init ();
-  lcd_send_string("PRESS A BUTTON");
+  lcd_put_cur(0, 0);
+  lcd_send_string("STARTUP...");
+  HAL_Delay(5000);
+  lcd_clear();
+  //lcd_send_string("PRESS A BUTTON");
   //This Callback will be called when the DMA receive call is complete
   //There's also a Half complete callback for circular buffer functions
   void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -350,13 +363,14 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 /*Funciones Máquina de Estado*/
+/*Funciones Máquina de Estado*/
 void f_idle(){
 	lcd_put_cur(0, 0);
 	lcd_send_string("PRESIONE UN BOTON");
 	lcd_put_cur(1, 0);
 	lcd_send_string("PARA CONTINUAR");
 	if(getKey()){
-		state = MCU_STATES::SELECT;
+		state = SELECT;
 		lcd_clear();
 	}
 }
@@ -373,22 +387,22 @@ void f_select(){
 	switch(cof){
 	case '1':
 		strcpy(coffee, "Cafe");
-		state = MCU_STATES::CONFIRM;
+		state = CONFIRM;
 		lcd_clear();
 		break;
 	case '2':
 		strcpy(coffee, "Leche");
-		state = MCU_STATES::CONFIRM;
+		state = CONFIRM;
 		lcd_clear();
 		break;
 	case '3':
 		strcpy(coffee, "Te");
-		state = MCU_STATES::CONFIRM;
+		state = CONFIRM;
 		lcd_clear();
 		break;
 	case '4':
 		strcpy(coffee, "Chocolate");
-		state = MCU_STATES::CONFIRM;
+		state = CONFIRM;
 		lcd_clear();
 		break;
 	default:
@@ -404,16 +418,17 @@ void f_confirm(){
 	lcd_send_string("CONFIRMA CON A");
 	char conf = pads[getKey()];
 	if(conf == 'A'){
-		state = MCU_STATES::BUSY;
+		state = BUSY;
 		lcd_clear();
 	}else if(conf == 'B'){
-		state = MCU_STATES::SELECT;
+		state = SELECT;
 		lcd_clear();
 	}
 }
 
 void f_busy(){
-	//Gestor.HacerPedido(...)
+	//Falta enviar datos a FPGA
+	//Gestor.HacerPedido()
 
 	lcd_put_cur(0, 0);
 	lcd_send_string("PREPARANDO...");
@@ -425,9 +440,10 @@ void f_busy(){
 	 * para cambiar a DONE
 	 * (o a ERR)
 	 */
+	//No hay interrupción, tendremos que acceder a Gestor
 
 	HAL_Delay(10000); //Quitar
-	state = MCU_STATES::DONE;     //Quitar
+	state = DONE;     //Quitar
 
 	lcd_clear();
 }
@@ -438,7 +454,7 @@ void f_done(){
 	lcd_put_cur(1, 0);
 	lcd_send_string("COGER SU PRODUCTO");
 	if(pads[getKey()] == 'A'){
-		state = MCU_STATES::IDLE;
+		state = IDLE;
 		lcd_clear();
 	}
 }
@@ -446,6 +462,7 @@ void f_done(){
 void f_error(){
 	//FALTA
 }
+
 
 /* USER CODE END 4 */
 

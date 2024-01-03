@@ -21,6 +21,8 @@ public:
 	GestorPedidos(UART_HandleTypeDef * caf1, UART_HandleTypeDef * caf2, UART_HandleTypeDef * caf3);
 	void AddCafetera(Cafetera c){cafetera_vec.push_back(c);}
 	uint8_t huart_p2Cafetera_index(UART_HandleTypeDef * uart_dir);
+	uint8_t getRawStatus(uint8_t caf_index){return cafetera_vec[caf_index].getRawStatus();}
+	FPGA_TABLE getStatus(uint8_t caf_index){return cafetera_vec[caf_index].getStatus()}
 	uint8_t HacerPedido(Pedido* p);
 	uint8_t HacerPedido(Pedido_t prod, uint8_t time);
 };
