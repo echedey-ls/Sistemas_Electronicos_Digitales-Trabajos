@@ -35,10 +35,10 @@ uint8_t Prod2msg(Prod_t prod, uint8_t time){
 }
 
 //si no hay máquinas devuelve 1, si todas están ocupadas, devuelve 2, si todo ok 0
-uint8_t GestorPedidos::HacerPedido(Pedido p){
+uint8_t GestorPedidos::HacerPedido(Pedido* p){
 	if (cafetera_vec.size()==0){
 		delete p;
-		Pedido::last_id-1;
+		Pedido::last_id = Pedido::last_id-1;
 		return 1;
 		//si no se consigue, no se añade y por tanto bajamos el id que
 		//habíamos subido
@@ -56,7 +56,7 @@ uint8_t GestorPedidos::HacerPedido(Pedido p){
 	//este es el caso en el que no hay disponibles
 	if (caf_index == cafetera_vec.size()){
 		delete p;
-		Pedido::last_id-1;
+		Pedido::last_id = Pedido::last_id-1;
 		return 2;
 	}
 	//en este caso, mandamos el pedido a la máquina
@@ -69,6 +69,5 @@ uint8_t GestorPedidos::HacerPedido(Pedido p){
 }
 
 uint8_t GestorPedidos::HacerPedido(Pedido_t prod, uint8_t time){
-	Pedido p(prod, time);
-	return this->HacerPedido(p);
+	return this->HacerPedido(new Pedido(prod, time));
 }
