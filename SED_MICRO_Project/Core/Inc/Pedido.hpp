@@ -8,6 +8,8 @@
 #ifndef INC_PEDIDO_HPP_
 #define INC_PEDIDO_HPP_
 
+#include "stm32f4xx_hal.h"
+
 enum Pedido_t{
 	CAFE = 0x00,
 	TE = 0x01,
@@ -17,7 +19,7 @@ enum Pedido_t{
 
 class Pedido{
 	friend class GestorPedidos;
-	static uint8_t last_id = 1;
+	static uint8_t last_id;
 	uint8_t ID;
 	Pedido_t producto;
 	uint8_t tiempo;

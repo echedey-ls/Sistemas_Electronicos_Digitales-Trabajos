@@ -8,6 +8,8 @@
 #ifndef INC_CAFETERA_HPP_
 #define INC_CAFETERA_HPP_
 
+#include "stm32f4xx_hal.h"
+
 //#include "stm32f4xx_hal.h"
 enum FPGA_TABLE {
 	FAULT = 0x7FU,
@@ -22,7 +24,7 @@ class Cafetera{
 	UART_HandleTypeDef *UART_DIR;
 public:
 	Cafetera(UART_HandleTypeDef * uart_dir):UART_DIR(uart_dir){
-		HAL_UART_Receive_DMA(UART_DIR, status, 1);
+		HAL_UART_Receive_DMA(UART_DIR, &status, 1);
 	}
 	void Send(uint8_t msg){HAL_UART_Transmit(UART_DIR, msg, 1, 5);}
 	//void SendProd( msg){HAL_UART_Transmit(UART_DIR, msg, 1, 5);}
