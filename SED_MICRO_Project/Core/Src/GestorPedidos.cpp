@@ -7,16 +7,16 @@
 
 #include "GestorPedidos.hpp"
 
-GestorPedidos::GestorPedidos(Cafetera caf1, Cafetera caf2=NULL, Cafetera caf3=NULL){
+GestorPedidos::GestorPedidos(Cafetera caf1, Cafetera caf2=Cafetera(nullptr), Cafetera caf3=Cafetera(nullptr)){
 	cafetera_vec.push_back(caf1);
-	if(caf2!=NULL)cafetera_vec.push_back(caf2);
-	if(caf3!=NULL)cafetera_vec.push_back(caf3);
+	if(caf2.getUART_DIR()!= nullptr)cafetera_vec.push_back(caf2);
+	if(caf3.getUART_DIR()!= nullptr)cafetera_vec.push_back(caf3);
 }
 
-GestorPedidos::GestorPedidos(UART_HandleTypeDef * caf1, UART_HandleTypeDef * caf2=NULL, UART_HandleTypeDef * caf3=NULL){
+GestorPedidos::GestorPedidos(UART_HandleTypeDef * caf1, UART_HandleTypeDef * caf2=nullptr, UART_HandleTypeDef * caf3=nullptr){
 	cafetera_vec.push_back(Cafetera(caf1));
-	if(caf2!=NULL)cafetera_vec.push_back(Cafetera(caf2));
-	if(caf3!=NULL)cafetera_vec.push_back(Cafetera (caf3));
+	if(caf2!=nullptr)cafetera_vec.push_back(Cafetera(caf2));
+	if(caf3!=nullptr)cafetera_vec.push_back(Cafetera (caf3));
 }
 
 uint8_t GestorPedidos::huart_p2Cafetera_index(UART_HandleTypeDef * uart_dir){
