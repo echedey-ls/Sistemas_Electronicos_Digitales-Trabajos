@@ -7,6 +7,18 @@
 
 #include "keypad.h"
 
+uint16_t outall = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+
+uint16_t inps[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3};
+uint16_t outs[] = {GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_6, GPIO_PIN_7};
+
+const char pads[] = {'\0',
+		'1', '4', '7', '*',
+		'2', '5', '8', '0',
+		'3', '6', '9', '#',
+		'A', 'B', 'C', 'D'
+};
+
 /*
 uint16_t getKey(){
 	uint16_t btns = 0;
