@@ -17,10 +17,8 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "../Inc/main.hpp"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include "i2c-lcd.h"
 #include "keypad.h"
 #include "GestorPedidos.hpp"
