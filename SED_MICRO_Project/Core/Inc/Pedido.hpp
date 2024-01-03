@@ -8,18 +8,16 @@
 #ifndef INC_PEDIDO_HPP_
 #define INC_PEDIDO_HPP_
 
-//WIP
-//TBD codificar los valores en Pedido_t
 enum Pedido_t{
-	CAFE,
-	LECHE,
-	TE,
-	CHOCOLATE
+	CAFE = 0x00,
+	TE = 0x01,
+	LECHE = 0x02,
+	CHOCOLATE = 0x03
 };
 
 class Pedido{
 	friend class GestorPedidos;
-	static unint8_t last_id = 1;
+	static uint8_t last_id = 1;
 	uint8_t ID;
 	Pedido_t producto;
 	uint8_t tiempo;
