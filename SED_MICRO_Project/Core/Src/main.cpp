@@ -25,7 +25,7 @@
 #include "cafetera.hpp"
 #include "Pedido.hpp"
 
-#include <string>
+#include <cstring>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -373,22 +373,22 @@ void f_select(){
 	switch(cof){
 	case '1':
 		strcpy(coffee, "Cafe");
-		state = CONFIRM;
+		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	case '2':
 		strcpy(coffee, "Leche");
-		state = CONFIRM;
+		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	case '3':
 		strcpy(coffee, "Te");
-		state = CONFIRM;
+		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	case '4':
 		strcpy(coffee, "Chocolate");
-		state = CONFIRM;
+		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	default:
