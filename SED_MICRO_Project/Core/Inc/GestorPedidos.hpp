@@ -17,8 +17,8 @@ class GestorPedidos{
 	std::vector<Pedido> active_orders;
 public:
 	GestorPedidos(std::vector<Cafetera> v):cafetera_vec(v){}
-	GestorPedidos(Cafetera caf1, Cafetera caf2=NULL, Cafetera caf3=NULL);
-	GestorPedidos(UART_HandleTypeDef * caf1, UART_HandleTypeDef * caf2=NULL, UART_HandleTypeDef * caf3=NULL);
+	GestorPedidos(Cafetera caf1, Cafetera caf2, Cafetera caf3);
+	GestorPedidos(UART_HandleTypeDef * caf1, UART_HandleTypeDef * caf2, UART_HandleTypeDef * caf3);
 	void AddCafetera(Cafetera c){cafetera_vec.push_back(c);}
 	uint8_t huart_p2Cafetera_index(UART_HandleTypeDef * uart_dir);
 	uint8_t HacerPedido(Pedido p);

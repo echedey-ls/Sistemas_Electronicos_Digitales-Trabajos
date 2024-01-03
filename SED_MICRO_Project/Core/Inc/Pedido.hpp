@@ -32,7 +32,7 @@ public:
 	void setAssignedCaf(uint8_t a_c){assigned_cafetera = a_c;}
 	uint8_t getTime(){return tiempo;}
 	Pedido_t getProduct(){return producto;}
-	char* Prod2char(){
+	/*char* Prod2char(){
 		switch(producto){
 		case CAFE:
 			return "CAFE";
@@ -47,7 +47,7 @@ public:
 			return "CHOC";
 			break;
 		}
-	}
+	}*/
 };
 
 
