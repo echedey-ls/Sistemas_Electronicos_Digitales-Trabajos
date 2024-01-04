@@ -161,10 +161,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  getKey(buffer);
-	  lcd_put_cur(1, 0);
-	  lcd_send_string(buffer);
-	  lcd_send_string("                ");
+	  
 	  //This call is non blocking and should be called when we want to
 	  //start updating FPGA_STATUS
     /* USER CODE END WHILE */
