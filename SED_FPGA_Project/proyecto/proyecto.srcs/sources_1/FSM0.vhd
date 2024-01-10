@@ -22,7 +22,6 @@ ENTITY FSM0 IS
         o_HEATER : OUT STD_ULOGIC;
         o8_REMAINING_SECS : OUT STD_ULOGIC_VECTOR(7 DOWNTO 0);
         o_PRODUCT_STR : OUT ProductType;
-        o_PRODUCT_LOAD : OUT STD_ULOGIC;
         oo_UART_DBG : OUT STD_ULOGIC_VECTOR
     );
 END FSM0;
@@ -241,39 +240,45 @@ BEGIN ----------------------------------------
         END IF;
     END PROCESS;
 
-    nextstate_decod : PROCESS (i_CLK, CURRENT_STATE)
+    nextstate_and_text_decod : PROCESS (i_CLK, CURRENT_STATE)
+        --! 7-Segments text string enum is written here
+        -- It is NOT assigned in action_decode since
+        -- it only makes sense to update in transition WAIT_FOR_CMD -> COUNT_DOWN.
+        -- Remaining of the time, it just holds a constant value.
+        VARIABLE int_PRODUCT_TYPE : ProductType := DASHES;
     BEGIN
         NEXT_STATE <= CURRENT_STATE;
-        oo_UART_DBG(9 DOWNTO 5) <= (OTHERS => '0');
         CASE CURRENT_STATE IS
             WHEN ENTRY_POINT =>
-                oo_UART_DBG(5) <= '1';
                 NEXT_STATE <= WAIT_FOR_CMD;
+                int_PRODUCT_TYPE := int_PRODUCT_TYPE;
             WHEN WAIT_FOR_CMD =>
-                oo_UART_DBG(6) <= '1';
+                int_PRODUCT_TYPE := int_PRODUCT_TYPE;
                 IF Recv_CMD_Product_Request = '1' THEN
                     NEXT_STATE <= COUNT_DOWN;
+                    int_PRODUCT_TYPE := CMD_RX_prod_type;
                 END IF;
             WHEN COUNT_DOWN =>
-                oo_UART_DBG(7) <= '1';
                 IF Timer_has_finished = '1' THEN
                     NEXT_STATE <= ORDER_FINISHED;
                 ELSIF Any_CMD_Cancel = '1' THEN
                     NEXT_STATE <= ORDER_CANCELLED;
                 END IF;
+                int_PRODUCT_TYPE := int_PRODUCT_TYPE;
             WHEN ORDER_CANCELLED =>
-                oo_UART_DBG(8) <= '1';
                 NEXT_STATE <= ENTRY_POINT;
+                int_PRODUCT_TYPE := CANCEL;
             WHEN ORDER_FINISHED =>
-                oo_UART_DBG(9) <= '1';
                 NEXT_STATE <= ENTRY_POINT;
+                int_PRODUCT_TYPE := DASHES;
             WHEN OTHERS =>
                 NEXT_STATE <= ENTRY_POINT;
+                int_PRODUCT_TYPE := int_PRODUCT_TYPE;
         END CASE;
-    END PROCESS nextstate_decod;
+        o_PRODUCT_STR <= int_PRODUCT_TYPE;
+    END PROCESS nextstate_and_text_decod;
 
     action_decod : PROCESS (i_CLK, CURRENT_STATE)
-        VARIABLE display_txt : ProductType := DASHES;
     BEGIN
         --! Default action values
         o_HEATER <= '0';
@@ -281,30 +286,20 @@ BEGIN ----------------------------------------
         Timer_load <= '0';
         Timer_clear <= '0';
         Do_countdown <= '0';
-        o_PRODUCT_LOAD <= '0';
-        display_txt := display_txt; -- Text to display latch
-        oo_UART_DBG(4 DOWNTO 0) <= (OTHERS => '0');
         CASE CURRENT_STATE IS
             WHEN ENTRY_POINT =>
-                oo_UART_DBG(0) <= '1';
                 --! In case some initialization is required, or data send on power-up
                 -- Reset timer
                 -- Last_prod_cancelled <= '0';
                 Do_countdown <= '0';
                 Timer_clear <= '1';
-                o_PRODUCT_LOAD <= '1';
-                display_txt := DASHES;
             WHEN WAIT_FOR_CMD =>
-                oo_UART_DBG(1) <= '1';
                 Send_flag <= '1';
                 Send_status_enum <= AVAILABLE;
                 IF Recv_CMD_Product_Request = '1' THEN
                     Timer_load <= '1';
-                    display_txt := CMD_RX_prod_type;
-                    o_PRODUCT_LOAD <= '1';
                 END IF;
             WHEN COUNT_DOWN =>
-                oo_UART_DBG(2) <= '1';
                 o_HEATER <= '1';
                 Do_countdown <= '1';
                 IF Recv_CMD_Product_Request THEN
@@ -312,21 +307,16 @@ BEGIN ----------------------------------------
                     Send_status_enum <= BUSY;
                 END IF;
             WHEN ORDER_CANCELLED =>
-                oo_UART_DBG(3) <= '1';
-                display_txt := CANCEL;
                 Send_flag <= '1';
                 Send_status_enum <= FAULT;
                 Timer_clear <= '1';
             WHEN ORDER_FINISHED =>
-                oo_UART_DBG(4) <= '1';
-                display_txt := DASHES;
                 Send_flag <= '1';
                 Send_status_enum <= FINISHED;
             WHEN OTHERS =>
                 Send_flag <= '1';
                 Send_status_enum <= FAULT;
         END CASE;
-        o_PRODUCT_STR <= display_txt;
     END PROCESS action_decod;
     --! END OF STATE MACHINE !--
     ----------------------------
