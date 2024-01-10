@@ -12,10 +12,11 @@
 
 #define BANK GPIOD
 
-uint16_t outall = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+extern uint16_t outall;
+extern uint16_t inps[4];
+extern uint16_t outs[4];
 
-uint16_t inps[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3};
-uint16_t outs[] = {GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_6, GPIO_PIN_7};
+extern const char pads[17];
 
 //uint16_t getKey();
 

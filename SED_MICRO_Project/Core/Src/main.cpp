@@ -97,13 +97,6 @@ int col=0;
 
 char coffee[20];
 
-const char pads[] = {'\0',
-		'1', '4', '7', '*',
-		'2', '5', '8', '0',
-		'3', '6', '9', '#',
-		'A', 'B', 'C', 'D'
-};
-
 /* USER CODE END 0 */
 
 /**
@@ -146,15 +139,6 @@ int main(void)
   lcd_send_string("STARTUP...");
   HAL_Delay(5000);
   lcd_clear();
-  //lcd_send_string("PRESS A BUTTON");
-  //This Callback will be called when the DMA receive call is complete
-  //There's also a Half complete callback for circular buffer functions
-  void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-  {
-      if (huart == &huart4){
-
-      }
-  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -367,7 +351,7 @@ void f_idle(){
 	lcd_put_cur(1, 0);
 	lcd_send_string("PARA CONTINUAR");
 	if(getKey()){
-		state = SELECT;
+		state = MCU_STATES::SELECT;
 		lcd_clear();
 	}
 }
@@ -384,22 +368,22 @@ void f_select(){
 	switch(cof){
 	case '1':
 		strcpy(coffee, "Cafe");
-		state = CONFIRM;
+		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	case '2':
 		strcpy(coffee, "Leche");
-		state = CONFIRM;
+		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	case '3':
 		strcpy(coffee, "Te");
-		state = CONFIRM;
+		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	case '4':
 		strcpy(coffee, "Chocolate");
-		state = CONFIRM;
+		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	default:
@@ -415,10 +399,10 @@ void f_confirm(){
 	lcd_send_string("CONFIRMA CON A");
 	char conf = pads[getKey()];
 	if(conf == 'A'){
-		state = BUSY;
+		state = MCU_STATES::BUSY;
 		lcd_clear();
 	}else if(conf == 'B'){
-		state = SELECT;
+		state = MCU_STATES::SELECT;
 		lcd_clear();
 	}
 }
@@ -440,7 +424,7 @@ void f_busy(){
 	//No hay interrupción, tendremos que acceder a GestorPedidos y la caf correspondiente
 
 	HAL_Delay(10000); //Quitar
-	state = DONE;     //Quitar
+	state = MCU_STATES::DONE;     //Quitar
 
 	lcd_clear();
 }
@@ -451,7 +435,7 @@ void f_done(){
 	lcd_put_cur(1, 0);
 	lcd_send_string("COGER SU PRODUCTO");
 	if(pads[getKey()] == 'A'){
-		state = IDLE;
+		state = MCU_STATES::IDLE;
 		lcd_clear();
 	}
 }
