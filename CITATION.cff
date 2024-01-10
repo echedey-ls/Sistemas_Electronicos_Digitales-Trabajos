@@ -1,0 +1,25 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Sistemas_Electronicos_Digitales-Trabajos
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Echedey
+    family-names: Luis Álvarez
+    email: echelual@gmail.com
+  - given-names: Lucas
+    family-names: Gómez Velayos
+  - given-names: Lucas Antonio
+    family-names: Herrera Eckert
+repository-code: >-
+  https://github.com/echedey-ls/Sistemas_Electronicos_Digitales-Trabajos
+abstract: >-
+  Microprocessor and FPGA projects submitted to a final-year
+  subject at UPM-ETSIDI.
+keywords:
+  - 'FPGA, MCU, STM32F4, VHDL, C, C++'
+license: GPL-3.0-only
