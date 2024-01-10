@@ -50,14 +50,8 @@ UART_HandleTypeDef huart4;
 DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
-enum class FPGA_STATUS {
-	FAULT = 0x7F,
-	BUSY = 0x01,
-	AVAILABLE = 0x02,
-	FINISHED = 0x03,
-	UNDEF = 0x80
-};
-FPGA_STATUS fpga_status_h4 = FPGA_STATUS::UNDEF;
+
+FPGA_TABLE fpga_status_h4 = FPGA_TABLE::UNDEF;
 
 enum class MCU_STATES{
 	IDLE,
@@ -96,6 +90,12 @@ int row=0;
 int col=0;
 
 char coffee[20];
+Cafetera c(&huart4);
+GestorPedidos Gestor(c);
+
+Pedido_t cafe;
+
+uint8_t time = 10;
 
 /* USER CODE END 0 */
 
@@ -107,7 +107,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	//Al crear la cafetera se pone ya a escuchar con DMA por &huart4
-	GestorPedidos Gestor(Cafetera(&huart4));
+
 	//HAL_UART_Receive_DMA(&huart4, &fpga_status_h4, 1);
   /* USER CODE END 1 */
 
@@ -368,21 +368,25 @@ void f_select(){
 	switch(cof){
 	case '1':
 		strcpy(coffee, "Cafe");
+		cafe = Pedido_t::CAFE;
 		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	case '2':
 		strcpy(coffee, "Leche");
+		cafe = Pedido_t::LECHE;
 		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	case '3':
 		strcpy(coffee, "Te");
+		cafe = Pedido_t::TE;
 		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
 	case '4':
 		strcpy(coffee, "Chocolate");
+		cafe = Pedido_t::CHOCOLATE;
 		state = MCU_STATES::CONFIRM;
 		lcd_clear();
 		break;
@@ -408,8 +412,9 @@ void f_confirm(){
 }
 
 void f_busy(){
+
 	//Falta enviar datos a FPGA
-	//Gestor.HacerPedido()
+	if(Gestor.HacerPedido(cafe, time) != 0) state = MCU_STATES::ERR;
 
 	lcd_put_cur(0, 0);
 	lcd_send_string("PREPARANDO...");
@@ -422,11 +427,15 @@ void f_busy(){
 	 * (o a ERR)
 	 */
 	//No hay interrupción, tendremos que acceder a GestorPedidos y la caf correspondiente
+	if(Gestor.getStatus(0) == FPGA_TABLE::FINISHED){
+		state = MCU_STATES::DONE;
+		lcd_clear();
+	} else if(Gestor.getStatus(0) != FPGA_TABLE::BUSY){
+		state = MCU_STATES::ERR;
+		lcd_clear();
+	}
 
-	HAL_Delay(10000); //Quitar
-	state = MCU_STATES::DONE;     //Quitar
 
-	lcd_clear();
 }
 
 void f_done(){
@@ -441,7 +450,16 @@ void f_done(){
 }
 
 void f_error(){
-	//FALTA
+
+	lcd_put_cur(0, 0);
+	lcd_send_string("CAGASTE!");
+	lcd_put_cur(1, 0);
+	lcd_send_string("PULSE D");
+	if(pads[getKey()] == 'D'){
+		state = MCU_STATES::IDLE;
+		lcd_clear();
+	}
+
 }
 
 

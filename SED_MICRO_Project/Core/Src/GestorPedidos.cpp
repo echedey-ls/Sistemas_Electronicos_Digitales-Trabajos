@@ -8,6 +8,9 @@
 #include "GestorPedidos.hpp"
 #include "Pedido.hpp"
 
+GestorPedidos::GestorPedidos(Cafetera caf1){
+	cafetera_vec.push_back(caf1);
+}
 GestorPedidos::GestorPedidos(Cafetera caf1, Cafetera caf2=Cafetera(nullptr), Cafetera caf3=Cafetera(nullptr)){
 	cafetera_vec.push_back(caf1);
 	if(caf2.getUART_DIR()!= nullptr)cafetera_vec.push_back(caf2);
