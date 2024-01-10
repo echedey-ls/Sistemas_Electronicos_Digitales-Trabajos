@@ -26,6 +26,7 @@
 #include "Pedido.hpp"
 
 #include <cstring>
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,6 +57,7 @@ FPGA_TABLE fpga_status_h4 = FPGA_TABLE::UNDEF;
 enum class MCU_STATES{
 	IDLE,
 	SELECT,
+	TIME,
 	CONFIRM,
 	BUSY,
 	DONE,
@@ -69,6 +71,7 @@ void f_select();
 void f_confirm();
 void f_busy();
 void f_done();
+void f_time();
 void f_error();
 
 //uint8_t FPGA_STATUS;
@@ -96,6 +99,8 @@ GestorPedidos Gestor(c);
 Pedido_t cafe;
 
 uint8_t time = 10;
+char t[] = {'0', '0', '0', '\0'};
+char num_;
 
 /* USER CODE END 0 */
 
@@ -114,7 +119,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+º  HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -159,6 +164,9 @@ int main(void)
 	  	  case MCU_STATES::SELECT:
 	  		  f_select();
 	  		  break;
+	  	  case MCU_STATES::TIME:
+	  		   f_time();
+	  		   break;
 	  	  case MCU_STATES::CONFIRM:
 	  		  f_confirm();
 	  		  break;
@@ -369,25 +377,25 @@ void f_select(){
 	case '1':
 		strcpy(coffee, "Cafe");
 		cafe = Pedido_t::CAFE;
-		state = MCU_STATES::CONFIRM;
+		state = MCU_STATES::TIME;
 		lcd_clear();
 		break;
 	case '2':
 		strcpy(coffee, "Leche");
 		cafe = Pedido_t::LECHE;
-		state = MCU_STATES::CONFIRM;
+		state = MCU_STATES::TIME;
 		lcd_clear();
 		break;
 	case '3':
 		strcpy(coffee, "Te");
 		cafe = Pedido_t::TE;
-		state = MCU_STATES::CONFIRM;
+		state = MCU_STATES::TIME;
 		lcd_clear();
 		break;
 	case '4':
 		strcpy(coffee, "Chocolate");
 		cafe = Pedido_t::CHOCOLATE;
-		state = MCU_STATES::CONFIRM;
+		state = MCU_STATES::TIME;
 		lcd_clear();
 		break;
 	default:
@@ -447,6 +455,37 @@ void f_done(){
 		state = MCU_STATES::IDLE;
 		lcd_clear();
 	}
+}
+
+void f_time(){
+
+	static int i = 0;
+	char num;
+	lcd_put_cur(0, 0);
+	lcd_send_string("CUANTO TIEMPO?");
+	lcd_put_cur(1, 0);
+	lcd_send_string(t);
+	num = pads[getKey()];
+	num_ = num;
+	if((num != 'A') || (num != 'B')
+			|| (num != 'C') || (num != 'D')
+			|| (num != '#') || (num != '*')
+			|| (num != '\0') ){
+
+		if(i < 3){
+			t[i++] = num;
+		}
+
+
+
+	}
+	if(num == 'A'){
+		time = atoi(t);
+		state = MCU_STATES::CONFIRM;
+		lcd_clear();
+		i = 0;
+	}
+
 }
 
 void f_error(){
