@@ -248,12 +248,11 @@ BEGIN ----------------------------------------
         VARIABLE int_PRODUCT_TYPE : ProductType := DASHES;
     BEGIN
         NEXT_STATE <= CURRENT_STATE;
+        int_PRODUCT_TYPE := int_PRODUCT_TYPE;
         CASE CURRENT_STATE IS
             WHEN ENTRY_POINT =>
                 NEXT_STATE <= WAIT_FOR_CMD;
-                int_PRODUCT_TYPE := int_PRODUCT_TYPE;
             WHEN WAIT_FOR_CMD =>
-                int_PRODUCT_TYPE := int_PRODUCT_TYPE;
                 IF Recv_CMD_Product_Request = '1' THEN
                     NEXT_STATE <= COUNT_DOWN;
                     int_PRODUCT_TYPE := CMD_RX_prod_type;
@@ -264,7 +263,6 @@ BEGIN ----------------------------------------
                 ELSIF Any_CMD_Cancel = '1' THEN
                     NEXT_STATE <= ORDER_CANCELLED;
                 END IF;
-                int_PRODUCT_TYPE := int_PRODUCT_TYPE;
             WHEN ORDER_CANCELLED =>
                 NEXT_STATE <= ENTRY_POINT;
                 int_PRODUCT_TYPE := CANCEL;
@@ -273,7 +271,6 @@ BEGIN ----------------------------------------
                 int_PRODUCT_TYPE := DASHES;
             WHEN OTHERS =>
                 NEXT_STATE <= ENTRY_POINT;
-                int_PRODUCT_TYPE := int_PRODUCT_TYPE;
         END CASE;
         o_PRODUCT_STR <= int_PRODUCT_TYPE;
     END PROCESS nextstate_and_text_decod;
@@ -286,6 +283,7 @@ BEGIN ----------------------------------------
         Timer_load <= '0';
         Timer_clear <= '0';
         Do_countdown <= '0';
+        Send_status_enum <= Send_status_enum;
         CASE CURRENT_STATE IS
             WHEN ENTRY_POINT =>
                 --! In case some initialization is required, or data send on power-up
