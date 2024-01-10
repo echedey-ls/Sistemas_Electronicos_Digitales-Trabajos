@@ -5,6 +5,11 @@
  *      Author: Lucas Herrera
  */
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "stm32f4xx_hal.h"
 
 #ifndef INC_KEYPAD_H_
@@ -23,3 +28,8 @@ extern const char pads[17];
 int getKey();
 
 #endif /* INC_KEYPAD_H_ */
+
+#ifdef __cplusplus
+}
+#endif
+

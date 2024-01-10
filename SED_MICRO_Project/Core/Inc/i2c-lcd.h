@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "stm32f4xx_hal.h"
 
 void lcd_init (void);   // initialize lcd
@@ -11,3 +16,7 @@ void lcd_send_string (const char *str);  // send string to the lcd
 void lcd_put_cur(int row, int col);  // put cursor at the entered position row (0 or 1), col (0-15);
 
 void lcd_clear (void);
+
+#ifdef __cplusplus
+}
+#endif

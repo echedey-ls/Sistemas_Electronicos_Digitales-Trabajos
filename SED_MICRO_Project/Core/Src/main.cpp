@@ -17,7 +17,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "../Inc/main.hpp"
+#include "main.hpp"
 
 #include "i2c-lcd.h"
 #include "keypad.h"
