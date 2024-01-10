@@ -16,7 +16,7 @@
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 LIBRARY ieee;
-USE ieee.std_logic_1164.ALL;
+USE IEEE.STD_LOGIC_1164.ALL;
 USE ieee.numeric_std.ALL;
 
 ENTITY fluart IS
@@ -26,21 +26,21 @@ ENTITY fluart IS
         BRK_LEN : INTEGER := 10 -- break duration (tx), minimum break duration (rx) in bits
     );
     PORT (
-        clk : IN STD_LOGIC;
-        reset : IN STD_LOGIC;
+        clk : IN STD_ULOGIC;
+        reset : IN STD_ULOGIC;
 
-        rxd : IN STD_LOGIC;
-        txd : OUT STD_LOGIC;
+        rxd : IN STD_ULOGIC;
+        txd : OUT STD_ULOGIC;
 
-        tx_data : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-        tx_req : IN STD_LOGIC;
-        tx_brk : IN STD_LOGIC;
-        tx_busy : OUT STD_LOGIC;
-        tx_end : OUT STD_LOGIC;
-        rx_data : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-        rx_data_valid : OUT STD_LOGIC;
-        rx_brk : OUT STD_LOGIC;
-        rx_err : OUT STD_LOGIC
+        tx_data : IN STD_ULOGIC_VECTOR(7 DOWNTO 0);
+        tx_req : IN STD_ULOGIC;
+        tx_brk : IN STD_ULOGIC;
+        tx_busy : OUT STD_ULOGIC;
+        tx_end : OUT STD_ULOGIC;
+        rx_data : OUT STD_ULOGIC_VECTOR(7 DOWNTO 0);
+        rx_data_valid : OUT STD_ULOGIC;
+        rx_brk : OUT STD_ULOGIC;
+        rx_err : OUT STD_ULOGIC
     );
 
 BEGIN
@@ -54,12 +54,12 @@ ARCHITECTURE rtl OF fluart IS
 
     SIGNAL tx_state : state;
     SIGNAL tx_clk_div : INTEGER RANGE 0 TO CLK_DIV_MAX;
-    SIGNAL tx_data_tmp : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    SIGNAL tx_data_tmp : STD_ULOGIC_VECTOR(7 DOWNTO 0);
     SIGNAL tx_bit_cnt : INTEGER RANGE 0 TO BRK_LEN;
 
     SIGNAL rx_state : state;
-    SIGNAL rxd_d : STD_LOGIC_VECTOR(3 DOWNTO 0);
-    SIGNAL rx_data_i : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    SIGNAL rxd_d : STD_ULOGIC_VECTOR(3 DOWNTO 0);
+    SIGNAL rx_data_i : STD_ULOGIC_VECTOR(7 DOWNTO 0);
     SIGNAL rx_clk_div : INTEGER RANGE 0 TO CLK_DIV_MAX;
     SIGNAL rx_bit_cnt : INTEGER RANGE 0 TO BRK_LEN;
 

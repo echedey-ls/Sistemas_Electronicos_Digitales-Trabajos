@@ -21,20 +21,20 @@
 --------------------------------------------------------------------------------
 
 LIBRARY ieee;
-USE ieee.std_logic_1164.all;
+USE IEEE.STD_LOGIC_1164.ALL;
 
 ENTITY binary_to_bcd_digit IS
   PORT(
-    clk     : IN      STD_LOGIC;                      --system clock
-    reset_n : IN      STD_LOGIC;                      --active low asynchronous reset
-    ena     : IN      STD_LOGIC;                      --activate operation
-    binary  : IN      STD_LOGIC;                      --bit shifted into digit
-    c_out   : BUFFER  STD_LOGIC;                      --carry out shifted to next larger digit
-    bcd     : BUFFER  STD_LOGIC_VECTOR(3 DOWNTO 0));  --resulting BCD output
+    clk     : IN      STD_ULOGIC;                      --system clock
+    reset_n : IN      STD_ULOGIC;                      --active low asynchronous reset
+    ena     : IN      STD_ULOGIC;                      --activate operation
+    binary  : IN      STD_ULOGIC;                      --bit shifted into digit
+    c_out   : BUFFER  STD_ULOGIC;                      --carry out shifted to next larger digit
+    bcd     : BUFFER  STD_ULOGIC_VECTOR(3 DOWNTO 0));  --resulting BCD output
 END binary_to_bcd_digit;
 
 ARCHITECTURE logic OF binary_to_bcd_digit IS
-  SIGNAL prev_ena : STD_LOGIC;  --keeps track of the previous enable to identify when enable is first asserted
+  SIGNAL prev_ena : STD_ULOGIC;  --keeps track of the previous enable to identify when enable is first asserted
 BEGIN
 
   c_out <= bcd(3) OR (bcd(2) AND bcd(1)) OR (bcd(2) AND bcd(0)); --assert carry out when register value exceeds 4
