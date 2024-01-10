@@ -4729,7 +4729,7 @@ HAL_StatusTypeDef HAL_I2C_Master_Abort_IT(I2C_HandleTypeDef *hi2c, uint16_t DevA
   UNUSED(DevAddress);
 
   /* Abort Master transfer during Receive or Transmit process    */
-  if ((__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BUSY) != RESET) && ((CurrentMode == HAL_I2C_MODE_MASTER) || 
+  if ((__HAL_I2C_GET_FLAG(hi2c, I2C_FLAG_BUSY) != RESET) && ((CurrentMode == HAL_I2C_MODE_MASTER) ||
                                                              (CurrentMode == HAL_I2C_MODE_MEM)))
   {
     /* Process Locked */
@@ -7568,4 +7568,3 @@ static void I2C_ConvertOtherXferOptions(I2C_HandleTypeDef *hi2c)
 /**
   * @}
   */
-
