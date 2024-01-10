@@ -17,12 +17,15 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "main.hpp"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include "i2c-lcd.h"
-//#include "keypad.h" //Da error si se incluye
+#include "keypad.h"
+#include "GestorPedidos.hpp"
+#include "cafetera.hpp"
+#include "Pedido.hpp"
+
+#include <cstring>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -43,14 +46,46 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
-/* USER CODE BEGIN PV */
+UART_HandleTypeDef huart4;
+DMA_HandleTypeDef hdma_uart4_rx;
 
+/* USER CODE BEGIN PV */
+enum class FPGA_STATUS {
+	FAULT = 0x7F,
+	BUSY = 0x01,
+	AVAILABLE = 0x02,
+	FINISHED = 0x03,
+	UNDEF = 0x80
+};
+FPGA_STATUS fpga_status_h4 = FPGA_STATUS::UNDEF;
+
+enum class MCU_STATES{
+	IDLE,
+	SELECT,
+	CONFIRM,
+	BUSY,
+	DONE,
+	ERR
+};
+
+MCU_STATES state = MCU_STATES::IDLE;
+
+void f_idle();
+void f_select();
+void f_confirm();
+void f_busy();
+void f_done();
+void f_error();
+
+//uint8_t FPGA_STATUS;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -60,7 +95,8 @@ static void MX_I2C1_Init(void);
 int row=0;
 int col=0;
 
-char buffer[2];
+char coffee[20];
+
 /* USER CODE END 0 */
 
 /**
@@ -70,7 +106,9 @@ char buffer[2];
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	//Al crear la cafetera se pone ya a escuchar con DMA por &huart4
+	GestorPedidos Gestor(Cafetera(&huart4));
+	//HAL_UART_Receive_DMA(&huart4, &fpga_status_h4, 1);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -91,22 +129,50 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
+
   lcd_init ();
-  lcd_send_string("PRESS A BUTTON");
+  lcd_put_cur(0, 0);
+  lcd_send_string("STARTUP...");
+  HAL_Delay(5000);
+  lcd_clear();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  
+	  //This call is non blocking and should be called when we want to
+	  //start updating FPGA_STATUS
     /* USER CODE END WHILE */
-	getKey(buffer);
-	lcd_put_cur(1, 0);
-	lcd_send_string(buffer);
-	lcd_send_string("                ");
+
     /* USER CODE BEGIN 3 */
+	  /*BEGIN Máquina de Estados*/
+	  	  switch(state){
+	  	  case MCU_STATES::IDLE:
+	  		  f_idle();
+	  		  break;
+	  	  case MCU_STATES::SELECT:
+	  		  f_select();
+	  		  break;
+	  	  case MCU_STATES::CONFIRM:
+	  		  f_confirm();
+	  		  break;
+	  	  case MCU_STATES::BUSY:
+	  		  f_busy();
+	  		  break;
+	  	  case MCU_STATES::DONE:
+	  		  f_done();
+	  		  break;
+	  	  case MCU_STATES::ERR:
+	  		  f_error();
+	  		  break;
+	  	  }
+
   }
   /* USER CODE END 3 */
 }
@@ -192,6 +258,55 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief UART4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART4_Init(void)
+{
+
+  /* USER CODE BEGIN UART4_Init 0 */
+
+  /* USER CODE END UART4_Init 0 */
+
+  /* USER CODE BEGIN UART4_Init 1 */
+
+  /* USER CODE END UART4_Init 1 */
+  huart4.Instance = UART4;
+  huart4.Init.BaudRate = 10000;
+  huart4.Init.WordLength = UART_WORDLENGTH_8B;
+  huart4.Init.StopBits = UART_STOPBITS_1;
+  huart4.Init.Parity = UART_PARITY_NONE;
+  huart4.Init.Mode = UART_MODE_TX_RX;
+  huart4.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart4.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART4_Init 2 */
+
+  /* USER CODE END UART4_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream2_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -203,6 +318,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
@@ -227,6 +343,107 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/*Funciones Máquina de Estado*/
+/*Funciones Máquina de Estado*/
+void f_idle(){
+	lcd_put_cur(0, 0);
+	lcd_send_string("PRESIONE UN BOTON");
+	lcd_put_cur(1, 0);
+	lcd_send_string("PARA CONTINUAR");
+	if(getKey()){
+		state = MCU_STATES::SELECT;
+		lcd_clear();
+	}
+}
+
+void f_select(){
+	static int sel;
+	sel = getKey();
+	static char cof;
+	cof = pads[sel];
+	lcd_put_cur(0, 0);
+	lcd_send_string("SELECCIONE UN");
+	lcd_put_cur(1, 0);
+	lcd_send_string("PRODUCTO");
+	switch(cof){
+	case '1':
+		strcpy(coffee, "Cafe");
+		state = MCU_STATES::CONFIRM;
+		lcd_clear();
+		break;
+	case '2':
+		strcpy(coffee, "Leche");
+		state = MCU_STATES::CONFIRM;
+		lcd_clear();
+		break;
+	case '3':
+		strcpy(coffee, "Te");
+		state = MCU_STATES::CONFIRM;
+		lcd_clear();
+		break;
+	case '4':
+		strcpy(coffee, "Chocolate");
+		state = MCU_STATES::CONFIRM;
+		lcd_clear();
+		break;
+	default:
+		break;
+	}
+
+}
+
+void f_confirm(){
+	lcd_put_cur(0, 0);
+	lcd_send_string(coffee);
+	lcd_put_cur(1, 0);
+	lcd_send_string("CONFIRMA CON A");
+	char conf = pads[getKey()];
+	if(conf == 'A'){
+		state = MCU_STATES::BUSY;
+		lcd_clear();
+	}else if(conf == 'B'){
+		state = MCU_STATES::SELECT;
+		lcd_clear();
+	}
+}
+
+void f_busy(){
+	//Falta enviar datos a FPGA
+	//Gestor.HacerPedido()
+
+	lcd_put_cur(0, 0);
+	lcd_send_string("PREPARANDO...");
+	lcd_put_cur(1, 0);
+	lcd_send_string("ESPERE UN POCO");
+
+	/* Falta
+	 * Interrupción de FPGA
+	 * para cambiar a DONE
+	 * (o a ERR)
+	 */
+	//No hay interrupción, tendremos que acceder a GestorPedidos y la caf correspondiente
+
+	HAL_Delay(10000); //Quitar
+	state = MCU_STATES::DONE;     //Quitar
+
+	lcd_clear();
+}
+
+void f_done(){
+	lcd_put_cur(0, 0);
+	lcd_send_string("LISTO! PUEDE");
+	lcd_put_cur(1, 0);
+	lcd_send_string("COGER SU PRODUCTO");
+	if(pads[getKey()] == 'A'){
+		state = MCU_STATES::IDLE;
+		lcd_clear();
+	}
+}
+
+void f_error(){
+	//FALTA
+}
+
 
 /* USER CODE END 4 */
 

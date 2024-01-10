@@ -6,7 +6,7 @@ extern I2C_HandleTypeDef hi2c1;  // change your handler here accordingly
 
 #define SLAVE_ADDRESS_LCD 0x4E // change this according to ur setup
 
-void lcd_send_cmd (char cmd)
+void lcd_send_cmd (const char cmd)
 {
   char data_u, data_l;
 	uint8_t data_t[4];
@@ -19,7 +19,7 @@ void lcd_send_cmd (char cmd)
 	HAL_I2C_Master_Transmit (&hi2c1, SLAVE_ADDRESS_LCD,(uint8_t *) data_t, 4, 100);
 }
 
-void lcd_send_data (char data)
+void lcd_send_data (const char data)
 {
 	char data_u, data_l;
 	uint8_t data_t[4];
@@ -83,7 +83,7 @@ void lcd_init (void)
 	lcd_send_cmd (0x0C); //Display on/off control --> D = 1, C and B = 0. (Cursor and blink, last two bits)
 }
 
-void lcd_send_string (char *str)
+void lcd_send_string (const char *str)
 {
 	while (*str) lcd_send_data (*str++);
 }

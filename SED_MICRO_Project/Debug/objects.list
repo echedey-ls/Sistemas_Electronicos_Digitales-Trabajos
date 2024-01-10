@@ -1,3 +1,5 @@
+"./Core/Src/GestorPedidos.o"
+"./Core/Src/Pedido.o"
 "./Core/Src/i2c-lcd.o"
 "./Core/Src/keypad.o"
 "./Core/Src/main.o"
@@ -24,3 +26,4 @@
 "./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.o"
 "./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.o"
 "./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.o"
+"./Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.o"
