@@ -26,6 +26,7 @@ public:
 	FPGA_TABLE getStatus(uint8_t caf_index){return cafetera_vec[caf_index].getStatus();}
 	uint8_t HacerPedido(Pedido* p);
 	uint8_t HacerPedido(Pedido_t prod, uint8_t time);
+	uint8_t PedidoFinalizado(uint8_t caf_index);
 };
 
 
