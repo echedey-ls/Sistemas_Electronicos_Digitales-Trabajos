@@ -22,7 +22,6 @@ ENTITY FSM0 IS
         o_HEATER : OUT STD_ULOGIC;
         o8_REMAINING_SECS : OUT STD_ULOGIC_VECTOR(7 DOWNTO 0);
         o_PRODUCT_STR : OUT ProductType;
-        o_PRODUCT_LOAD : OUT STD_ULOGIC;
         oo_UART_DBG : OUT STD_ULOGIC_VECTOR
     );
 END FSM0;
@@ -31,14 +30,11 @@ ARCHITECTURE arch_fsm OF FSM0 IS
     --! STATUS
     TYPE FSM_STATUS_T IS (
         ENTRY_POINT,
-        WAIT_FOR_CMD,
+        PRELAUNCH,
         COUNT_DOWN,
         ORDER_CANCELLED,
         ORDER_FINISHED
     );
-    -- Signals
-    SIGNAL CURRENT_STATE : FSM_STATUS_T := ENTRY_POINT;
-    SIGNAL NEXT_STATE : FSM_STATUS_T := ENTRY_POINT;
 
     -- Transition signals
     -- Composed later on
@@ -77,8 +73,8 @@ ARCHITECTURE arch_fsm OF FSM0 IS
     SIGNAL Recv_flag : STD_ULOGIC := '0';
     SIGNAL Recv_data : STD_ULOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
     SIGNAL Recv_brk : STD_ULOGIC := '0';
-    SIGNAL Send_flag : STD_ULOGIC := '0';
-    SIGNAL Send_status_enum : MachineStatus := FAULT;
+    SIGNAL Send_flag_pulse : STD_ULOGIC := '0';
+    SIGNAL Send_status_enum : MachineStatus := AVAILABLE;
     SIGNAL Send_status_byte : STD_ULOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
 
     --! INPUT COMMANDS TRANSLATOR
@@ -134,7 +130,7 @@ ARCHITECTURE arch_fsm OF FSM0 IS
     SIGNAL Do_countdown : STD_ULOGIC := '0';
     -- SIGNAL Last_prod_cancelled : STD_ULOGIC := '0';
 
-    --! Buttons Edge Detector
+    --! Buttons Edge Detector & UART TX Send pulse
     COMPONENT EDGEDTCTR IS
         PORT (
             CLK, RST_N : IN STD_ULOGIC;
@@ -144,6 +140,7 @@ ARCHITECTURE arch_fsm OF FSM0 IS
     END COMPONENT EDGEDTCTR;
     -- Signals
     SIGNAL CANCEL_BTN_EDGE : STD_ULOGIC := '0';
+    SIGNAL UART_TX_Send_flag : STD_ULOGIC := '0';
 BEGIN ----------------------------------------
     --! Check inputs
     ASSERT oo_UART_DBG'LENGTH >= 10;
@@ -161,7 +158,7 @@ BEGIN ----------------------------------------
         txd => o_SERIAL_OUT,
 
         tx_data => Send_status_byte,
-        tx_req => Send_flag,
+        tx_req => Send_flag_pulse,
         tx_brk => '0',
         tx_busy => OPEN,
         tx_end => OPEN,
@@ -221,6 +218,13 @@ BEGIN ----------------------------------------
         EDGE => CANCEL_BTN_EDGE
     );
 
+    Inst01_UART_TX_REQ_PULSE : EDGEDTCTR
+    PORT MAP(
+        CLK => i_CLK,
+        RST_N => i_RESET_N,
+        SYNC_IN => UART_TX_Send_flag,
+        EDGE => Send_flag_pulse
+    );
     --! State Machine !--
     ---------------------
     -- Transition signals
@@ -231,103 +235,98 @@ BEGIN ----------------------------------------
 
     oo_UART_DBG(13 DOWNTO 10) <= Timer_has_finished & Recv_CMD_Cancel & Recv_CMD_Product_Request & Any_CMD_Cancel;
 
-    -- Transition process
-    state_register : PROCESS (i_RESET_N, i_CLK)
+    -- Transition & actions process
+    fsm_main_proc : PROCESS (i_RESET_N, i_CLK)
+        VARIABLE CURRENT_STATE : FSM_STATUS_T := ENTRY_POINT;
+        VARIABLE NEXT_STATE : FSM_STATUS_T := ENTRY_POINT;
+        VARIABLE int_PRODUCT_TYPE : ProductType := DASHES;
     BEGIN
         IF i_RESET_N = '0' THEN
-            CURRENT_STATE <= ENTRY_POINT;
+            CURRENT_STATE := ENTRY_POINT;
         ELSIF rising_edge(i_CLK) THEN
-            CURRENT_STATE <= NEXT_STATE;
-        END IF;
-    END PROCESS;
+            --! Transition & and save current state for the next cycle
+            CURRENT_STATE := NEXT_STATE;
+            NEXT_STATE := CURRENT_STATE;
 
-    nextstate_decod : PROCESS (i_CLK, CURRENT_STATE)
-    BEGIN
-        NEXT_STATE <= CURRENT_STATE;
-        oo_UART_DBG(9 DOWNTO 5) <= (OTHERS => '0');
-        CASE CURRENT_STATE IS
-            WHEN ENTRY_POINT =>
-                oo_UART_DBG(5) <= '1';
-                NEXT_STATE <= WAIT_FOR_CMD;
-            WHEN WAIT_FOR_CMD =>
-                oo_UART_DBG(6) <= '1';
-                IF Recv_CMD_Product_Request = '1' THEN
-                    NEXT_STATE <= COUNT_DOWN;
-                END IF;
-            WHEN COUNT_DOWN =>
-                oo_UART_DBG(7) <= '1';
-                IF Timer_has_finished = '1' THEN
-                    NEXT_STATE <= ORDER_FINISHED;
-                ELSIF Any_CMD_Cancel = '1' THEN
-                    NEXT_STATE <= ORDER_CANCELLED;
-                END IF;
-            WHEN ORDER_CANCELLED =>
-                oo_UART_DBG(8) <= '1';
-                NEXT_STATE <= ENTRY_POINT;
-            WHEN ORDER_FINISHED =>
-                oo_UART_DBG(9) <= '1';
-                NEXT_STATE <= ENTRY_POINT;
-            WHEN OTHERS =>
-                NEXT_STATE <= ENTRY_POINT;
-        END CASE;
-    END PROCESS nextstate_decod;
+            --! Transition table
+            -- See FSM diagram
+            CASE CURRENT_STATE IS
+                WHEN ENTRY_POINT =>
+                    IF Recv_CMD_Product_Request = '1' THEN
+                        NEXT_STATE := PRELAUNCH;
+                    END IF;
+                WHEN PRELAUNCH =>
+                    NEXT_STATE := COUNT_DOWN;
+                WHEN COUNT_DOWN =>
+                    IF Timer_has_finished = '1' THEN
+                        NEXT_STATE := ORDER_FINISHED;
+                    ELSIF Any_CMD_Cancel = '1' THEN
+                        NEXT_STATE := ORDER_CANCELLED;
+                    END IF;
+                WHEN ORDER_CANCELLED =>
+                    IF Recv_CMD_Product_Request = '1' THEN
+                        NEXT_STATE := PRELAUNCH;
+                    END IF;
+                WHEN ORDER_FINISHED =>
+                    IF Recv_CMD_Product_Request = '1' THEN
+                        NEXT_STATE := PRELAUNCH;
+                    END IF;
+                WHEN OTHERS =>
+                    NEXT_STATE := ENTRY_POINT;
+            END CASE;
 
-    action_decod : PROCESS (i_CLK, CURRENT_STATE)
-        VARIABLE display_txt : ProductType := DASHES;
-    BEGIN
-        --! Default action values
-        o_HEATER <= '0';
-        Send_flag <= '0';
-        Timer_load <= '0';
-        Timer_clear <= '0';
-        Do_countdown <= '0';
-        o_PRODUCT_LOAD <= '0';
-        display_txt := display_txt; -- Text to display latch
-        oo_UART_DBG(4 DOWNTO 0) <= (OTHERS => '0');
-        CASE CURRENT_STATE IS
-            WHEN ENTRY_POINT =>
-                oo_UART_DBG(0) <= '1';
-                --! In case some initialization is required, or data send on power-up
-                -- Reset timer
-                -- Last_prod_cancelled <= '0';
-                Do_countdown <= '0';
-                Timer_clear <= '1';
-                o_PRODUCT_LOAD <= '1';
-                display_txt := DASHES;
-            WHEN WAIT_FOR_CMD =>
-                oo_UART_DBG(1) <= '1';
-                Send_flag <= '1';
-                Send_status_enum <= AVAILABLE;
-                IF Recv_CMD_Product_Request = '1' THEN
+            --! Action switch case
+            -- Default action values
+            o_HEATER <= '0';
+            Timer_load <= '0';
+            Timer_clear <= '0';
+            Do_countdown <= '0';
+            UART_TX_Send_flag <= '0';
+            Send_status_enum <= Send_status_enum;
+            int_PRODUCT_TYPE := int_PRODUCT_TYPE;
+            CASE CURRENT_STATE IS
+                WHEN ENTRY_POINT =>
+                    -- Show empty status on 7-Segments
+                    int_PRODUCT_TYPE := DASHES;
+                    -- Send AVAILABLE code on power-up / reset
+                    Send_status_enum <= AVAILABLE;
+                    UART_TX_Send_flag <= '1';
+                WHEN PRELAUNCH =>
                     Timer_load <= '1';
-                    display_txt := CMD_RX_prod_type;
-                    o_PRODUCT_LOAD <= '1';
-                END IF;
-            WHEN COUNT_DOWN =>
-                oo_UART_DBG(2) <= '1';
-                o_HEATER <= '1';
-                Do_countdown <= '1';
-                IF Recv_CMD_Product_Request THEN
-                    Send_flag <= '1';
+                    -- Show status on 7-Segments
+                    int_PRODUCT_TYPE := CMD_RX_prod_type;
+                    -- Send BUSY code on start
+                    UART_TX_Send_flag <= '1';
                     Send_status_enum <= BUSY;
-                END IF;
-            WHEN ORDER_CANCELLED =>
-                oo_UART_DBG(3) <= '1';
-                display_txt := CANCEL;
-                Send_flag <= '1';
-                Send_status_enum <= FAULT;
-                Timer_clear <= '1';
-            WHEN ORDER_FINISHED =>
-                oo_UART_DBG(4) <= '1';
-                display_txt := DASHES;
-                Send_flag <= '1';
-                Send_status_enum <= FINISHED;
-            WHEN OTHERS =>
-                Send_flag <= '1';
-                Send_status_enum <= FAULT;
-        END CASE;
-        o_PRODUCT_STR <= display_txt;
-    END PROCESS action_decod;
+                WHEN COUNT_DOWN =>
+                    -- Heat product, other logic could be implemented here
+                    o_HEATER <= '1';
+                    -- in this case, simulation via a 1-Hz counter
+                    Do_countdown <= '1';
+                    -- Send BUSY code if another product is requested
+                    IF Recv_CMD_Product_Request THEN
+                        UART_TX_Send_flag <= '1';
+                        Send_status_enum <= BUSY;
+                    END IF;
+                WHEN ORDER_CANCELLED =>
+                    Timer_clear <= '1';
+                    -- Show status on 7-Segments
+                    int_PRODUCT_TYPE := CANCEL;
+                    -- Send current product was cancelled by any means (from FPGA or UART RX command)
+                    UART_TX_Send_flag <= '1';
+                    Send_status_enum <= CANCELLED;
+                    WHEN ORDER_FINISHED =>
+                    -- Send FINISHED code
+                    UART_TX_Send_flag <= '1';
+                    Send_status_enum <= FINISHED;
+                WHEN OTHERS =>
+                    NULL;
+            END CASE;
+
+            --! Output assignments
+            o_PRODUCT_STR <= int_PRODUCT_TYPE;
+        END IF;
+    END PROCESS fsm_main_proc;
     --! END OF STATE MACHINE !--
     ----------------------------
 

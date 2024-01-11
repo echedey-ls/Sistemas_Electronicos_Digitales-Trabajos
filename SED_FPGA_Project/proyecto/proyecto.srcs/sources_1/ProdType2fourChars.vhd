@@ -38,7 +38,7 @@ BEGIN
         "0111" WHEN CANCEL,
         "1111" WHEN DASHES,
         "0000" WHEN NONE, -- Do not show anything
-        "0011" WHEN OTHERS;
+        "0101" WHEN OTHERS;
     WITH prod SELECT code0 <= -- fourth char
         "0011" WHEN COFFEE,
         "0000" WHEN TEA,
@@ -47,5 +47,5 @@ BEGIN
         "1000" WHEN CANCEL,
         "1111" WHEN DASHES,
         "0000" WHEN NONE, -- Do not show anything
-        "1001" WHEN OTHERS;
+        "0000" WHEN OTHERS;
 END ARCHITECTURE rtl;

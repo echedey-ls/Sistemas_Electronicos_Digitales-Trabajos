@@ -14,7 +14,6 @@ ENTITY SEGMENTS_MANAGER IS
         i_RESET_N : IN STD_ULOGIC;
         i8_REMAINING_SECS : IN STD_ULOGIC_VECTOR(7 DOWNTO 0);
         i_PRODUCT_TYPE : IN ProductType;
-        i_LOAD_PROD_TYPE : IN STD_LOGIC;
         o7_DIGIT_SEGMENTS : OUT STD_ULOGIC_VECTOR(6 DOWNTO 0);
         o8_DIGIT_DISABLE : OUT STD_ULOGIC_VECTOR(g_USED_SEGMENTS - 1 DOWNTO 0)
     );
@@ -66,7 +65,6 @@ ARCHITECTURE rtl OF SEGMENTS_MANAGER IS
             code0, code1, code2, code3 : OUT STD_ULOGIC_VECTOR(3 DOWNTO 0)
         );
     END COMPONENT ProductType2Chars;
-    SIGNAL int_PRODUCT_TYPE : ProductType := NONE;
 
     --! Freq. divider
     COMPONENT e21_fdivider IS
@@ -172,10 +170,9 @@ BEGIN
     END GENERATE;
 
     -- Get product enum type
-    int_PRODUCT_TYPE <= i_PRODUCT_TYPE when i_LOAD_PROD_TYPE = '1' else int_PRODUCT_TYPE;
     Inst00_Prod2Chars : ProductType2Chars
     PORT MAP(
-        prod => int_PRODUCT_TYPE,
+        prod => i_PRODUCT_TYPE,
         code0 => char_array(0),
         code1 => char_array(1),
         code2 => char_array(2),
