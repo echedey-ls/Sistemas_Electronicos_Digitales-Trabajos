@@ -4,7 +4,7 @@ USE IEEE.STD_LOGIC_1164.ALL;
 
 PACKAGE MACHINE_COMMON IS
     TYPE MachineStatus IS (
-        FAULT,
+        CANCELLED,
         BUSY,
         AVAILABLE,
         FINISHED
@@ -36,7 +36,7 @@ PACKAGE BODY MACHINE_COMMON IS
     FUNCTION MachineStatus2Byte(st : IN MachineStatus) RETURN BYTE IS
     BEGIN
         CASE st IS
-            WHEN FAULT => RETURN "01111111"; -- 0x7F
+            WHEN CANCELLED => RETURN "01111111"; -- 0x7F
             WHEN BUSY => RETURN "00000001"; -- 0x01
             WHEN AVAILABLE => RETURN "00000010"; -- 0x02
             WHEN FINISHED => RETURN "00000011"; -- 0x03

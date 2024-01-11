@@ -23,12 +23,11 @@ BEGIN
     o_IS_CANCEL_CMD <= '1' WHEN UNSIGNED(i8_rx_code) = 255 ELSE
         '0';
     o8_converted_secs <= int_ORDER_MSBs & "11";
-    WITH o_IS_CANCEL_CMD & int_ORDER_LSBs SELECT
     o_product_type <=
-        CANCEL WHEN "100" | "101" | "110" | "111",
-        COFFEE WHEN "000",
-        TEA WHEN "001",
-        MILK WHEN "010",
-        CHOCOLAT WHEN "011",
-        DASHES WHEN OTHERS;
+        CANCEL WHEN o_IS_CANCEL_CMD = '1' ELSE
+        COFFEE WHEN int_ORDER_LSBs = "00" ELSE
+        TEA WHEN int_ORDER_LSBs = "01" ELSE
+        MILK WHEN int_ORDER_LSBs = "10" ELSE
+        CHOCOLAT WHEN int_ORDER_LSBs = "11" ELSE
+        NONE;
 END RTL; -- RTL
