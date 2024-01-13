@@ -57,7 +57,7 @@ FPGA_TABLE fpga_status_h4 = FPGA_TABLE::UNDEF;
 enum class MCU_STATES{
 	IDLE,
 	SELECT,
-	TIME,
+	TEMP,
 	CONFIRM,
 	BUSY,
 	DONE,
@@ -71,7 +71,7 @@ void f_select();
 void f_confirm();
 void f_busy();
 void f_done();
-void f_time();
+void f_temp();
 void f_error();
 
 //uint8_t FPGA_STATUS;
@@ -98,9 +98,11 @@ GestorPedidos Gestor(c);
 
 Pedido_t cafe;
 
-uint8_t time = 10;
-char t[] = {'0', '0', '0', '\0'};
-char num_;
+uint8_t time = 20;
+char temp = '1';
+char dTemp[] = {'1', '\0'};
+
+uint8_t t2t = 20;
 
 /* USER CODE END 0 */
 
@@ -164,8 +166,8 @@ int main(void)
 	  	  case MCU_STATES::SELECT:
 	  		  f_select();
 	  		  break;
-	  	  case MCU_STATES::TIME:
-	  		   f_time();
+	  	  case MCU_STATES::TEMP:
+	  		f_temp();
 	  		   break;
 	  	  case MCU_STATES::CONFIRM:
 	  		  f_confirm();
@@ -351,9 +353,19 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+/*enum FPGA_TABLE {
+	FAULT = 0x7FU,
+	BUSY = 0x01U,
+	AVAILABLE = 0x02U,
+	FINISHED = 0x03U,
+	UNDEF = 0x80U
+};*/
+
 /*Funciones Máquina de Estado*/
 /*Funciones Máquina de Estado*/
 void f_idle(){
+
 	lcd_put_cur(0, 0);
 	lcd_send_string("PRESIONE UN BOTON");
 	lcd_put_cur(1, 0);
@@ -362,9 +374,14 @@ void f_idle(){
 		state = MCU_STATES::SELECT;
 		lcd_clear();
 	}
+	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
+		state = MCU_STATES::ERR;
+		lcd_clear();
+	}
 }
 
 void f_select(){
+
 	static int sel;
 	sel = getKey();
 	static char cof;
@@ -377,36 +394,44 @@ void f_select(){
 	case '1':
 		strcpy(coffee, "Cafe");
 		cafe = Pedido_t::CAFE;
-		state = MCU_STATES::TIME;
+		state = MCU_STATES::TEMP;
 		lcd_clear();
 		break;
 	case '2':
 		strcpy(coffee, "Leche");
 		cafe = Pedido_t::LECHE;
-		state = MCU_STATES::TIME;
+		state = MCU_STATES::TEMP;
 		lcd_clear();
 		break;
 	case '3':
 		strcpy(coffee, "Te");
 		cafe = Pedido_t::TE;
-		state = MCU_STATES::TIME;
+		state = MCU_STATES::TEMP;
 		lcd_clear();
 		break;
 	case '4':
 		strcpy(coffee, "Chocolate");
 		cafe = Pedido_t::CHOCOLATE;
-		state = MCU_STATES::TIME;
+		state = MCU_STATES::TEMP;
 		lcd_clear();
 		break;
 	default:
 		break;
 	}
 
+	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
+		state = MCU_STATES::ERR;
+		lcd_clear();
+	}
+
 }
 
 void f_confirm(){
+
 	lcd_put_cur(0, 0);
 	lcd_send_string(coffee);
+	lcd_send_string("   ");
+	lcd_send_string(dTemp);
 	lcd_put_cur(1, 0);
 	lcd_send_string("CONFIRMA CON A");
 	char conf = pads[getKey()];
@@ -415,6 +440,11 @@ void f_confirm(){
 		lcd_clear();
 	}else if(conf == 'B'){
 		state = MCU_STATES::SELECT;
+		lcd_clear();
+	}
+
+	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
+		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
 }
@@ -447,6 +477,7 @@ void f_busy(){
 }
 
 void f_done(){
+
 	lcd_put_cur(0, 0);
 	lcd_send_string("LISTO! PUEDE");
 	lcd_put_cur(1, 0);
@@ -455,35 +486,39 @@ void f_done(){
 		state = MCU_STATES::IDLE;
 		lcd_clear();
 	}
+
+	if(Gestor.getStatus(0) != FPGA_TABLE::FINISHED){
+		state = MCU_STATES::ERR;
+		lcd_clear();
+	}
 }
 
-void f_time(){
 
-	static int i = 0;
-	char num;
+
+void f_temp(){
+
+	static char num = '1';
+
 	lcd_put_cur(0, 0);
-	lcd_send_string("CUANTO TIEMPO?");
+	lcd_send_string(coffee);
 	lcd_put_cur(1, 0);
-	lcd_send_string(t);
+	lcd_send_string("Calor: ");
 	num = pads[getKey()];
-	num_ = num;
-	if((num != 'A') || (num != 'B')
-			|| (num != 'C') || (num != 'D')
-			|| (num != '#') || (num != '*')
-			|| (num != '\0') ){
 
-		if(i < 3){
-			t[i++] = num;
-		}
-
-
-
+	if((num >= 49) && (num <= 53)){
+		temp = num;
+		dTemp[0] = num;
+		lcd_send_string(dTemp);
+		time = (num - 48)*t2t;
 	}
 	if(num == 'A'){
-		time = atoi(t);
 		state = MCU_STATES::CONFIRM;
 		lcd_clear();
-		i = 0;
+	}
+
+	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
+		state = MCU_STATES::ERR;
+		lcd_clear();
 	}
 
 }
