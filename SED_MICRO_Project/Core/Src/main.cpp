@@ -98,11 +98,11 @@ GestorPedidos Gestor(c);
 
 Pedido_t cafe;
 
-uint8_t time = 20;
-char temp = '1';
-char dTemp[] = {'1', '\0'};
+uint8_t time = 20; //tiempo por defecto
+char temp = '1'; //Nivel de temperatura por defecto
+char dTemp[] = {'1', '\0'}; //Para mostrar nivel de temperatura
 
-uint8_t t2t = 20;
+uint8_t t2t = 20; //Constante de conversión de nivel de temperatura a tiempo
 
 /* USER CODE END 0 */
 
@@ -491,6 +491,9 @@ void f_done(){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
+
+	PedidoFinalizado(0);
+
 }
 
 
@@ -526,7 +529,7 @@ void f_temp(){
 void f_error(){
 
 	lcd_put_cur(0, 0);
-	lcd_send_string("CAGASTE!");
+	lcd_send_string("ERROR!");
 	lcd_put_cur(1, 0);
 	lcd_send_string("PULSE D");
 	if(pads[getKey()] == 'D'){
