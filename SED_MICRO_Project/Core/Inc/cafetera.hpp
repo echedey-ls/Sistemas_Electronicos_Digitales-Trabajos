@@ -23,7 +23,8 @@ class Cafetera{
 	uint8_t status;
 	UART_HandleTypeDef *UART_DIR;
 public:
-	Cafetera(UART_HandleTypeDef * uart_dir):UART_DIR(uart_dir){
+	Cafetera(UART_HandleTypeDef * uart_dir):UART_DIR(uart_dir){}
+	void init(){
 		HAL_UART_Receive_DMA(UART_DIR, &status, 1);
 	}
 	void Send(uint8_t msg){HAL_UART_Transmit(UART_DIR, &msg, 1, 5);}

@@ -8,25 +8,25 @@
 #include "GestorPedidos.hpp"
 #include "Pedido.hpp"
 
-GestorPedidos::GestorPedidos(Cafetera caf1){
+GestorPedidos::GestorPedidos(Cafetera* caf1){
 	cafetera_vec.push_back(caf1);
 }
 
-GestorPedidos::GestorPedidos(Cafetera caf1, Cafetera caf2=Cafetera(nullptr), Cafetera caf3=Cafetera(nullptr)){
+GestorPedidos::GestorPedidos(Cafetera* caf1, Cafetera* caf2=nullptr, Cafetera* caf3=nullptr){
 	cafetera_vec.push_back(caf1);
-	if(caf2.getUART_DIR()!= nullptr)cafetera_vec.push_back(caf2);
-	if(caf3.getUART_DIR()!= nullptr)cafetera_vec.push_back(caf3);
+	if(caf2->getUART_DIR()!= nullptr)cafetera_vec.push_back(caf2);
+	if(caf3->getUART_DIR()!= nullptr)cafetera_vec.push_back(caf3);
 }
 
 GestorPedidos::GestorPedidos(UART_HandleTypeDef * caf1, UART_HandleTypeDef * caf2=nullptr, UART_HandleTypeDef * caf3=nullptr){
-	cafetera_vec.push_back(Cafetera(caf1));
-	if(caf2!=nullptr)cafetera_vec.push_back(Cafetera(caf2));
-	if(caf3!=nullptr)cafetera_vec.push_back(Cafetera (caf3));
+	cafetera_vec.push_back(new Cafetera(caf1));
+	if(caf2!=nullptr)cafetera_vec.push_back(new Cafetera(caf2));
+	if(caf3!=nullptr)cafetera_vec.push_back(new Cafetera(caf3));
 }
 
 uint8_t GestorPedidos::huart_p2Cafetera_index(UART_HandleTypeDef * uart_dir){
 	for (uint8_t i=0; i<cafetera_vec.size(); i++){
-		if(uart_dir == cafetera_vec[i].getUART_DIR()){
+		if(uart_dir == cafetera_vec[i]->getUART_DIR()){
 			return i;
 		}
 	}
@@ -69,7 +69,7 @@ uint8_t GestorPedidos::HacerPedido(Pedido* p){
 	uint8_t caf_index;
 	FPGA_TABLE stat;
 	for (uint8_t i=0; i<cafetera_vec.size(); i++){
-		stat = cafetera_vec[i].getStatus();
+		stat = cafetera_vec[i]->getStatus();
 		if((stat == FPGA_TABLE::AVAILABLE)||(stat == FPGA_TABLE::FINISHED)
 				||(stat == FPGA_TABLE::FAULT)){
 			caf_index = i;
@@ -88,7 +88,7 @@ uint8_t GestorPedidos::HacerPedido(Pedido* p){
 	else {
 		p->setAssignedCaf(caf_index);//le asignamos la primera libre
 		active_orders.push_back(p); //añadimos el pedido a los que están siendo atendidos
-	 	cafetera_vec[caf_index].Send(Prod2msg(p->getProduct(), p->getTime()));
+	 	cafetera_vec[caf_index]->Send(Prod2msg(p->getProduct(), p->getTime()));
 	 	return 0;
 	}
 }

@@ -94,7 +94,7 @@ int col=0;
 
 char coffee[20];
 Cafetera c(&huart4);
-GestorPedidos Gestor(c);
+GestorPedidos Gestor(&c);
 
 Pedido_t cafe;
 
@@ -139,6 +139,7 @@ int main(void)
   MX_DMA_Init();
   MX_I2C1_Init();
   MX_UART4_Init();
+  Gestor.init(0);
   /* USER CODE BEGIN 2 */
 
   lcd_init ();
@@ -492,7 +493,7 @@ void f_done(){
 		lcd_clear();
 	}
 
-	PedidoFinalizado(0);
+	Gestor.PedidoFinalizado(0);
 
 }
 
