@@ -92,7 +92,7 @@ int main(void) {
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart2, &data_recv, 1);
+  //HAL_UART_Receive_IT(&huart2, &data_recv, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -103,12 +103,17 @@ int main(void) {
     if (send_cmd) {
       HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
       send_cmd = false;
+      data_recv = 0;
       HAL_UART_Transmit(&huart2, &data_send, 1, 1000);
       HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
     }
-    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_15, GPIO_PIN_SET);
-    HAL_UART_Receive(&huart2, &data_recv, 1, 1000);
-    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_15, GPIO_PIN_RESET);
+
+    if (HAL_UART_Receive(&huart2, &data_recv, 1, 100) == HAL_OK) {
+    	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_15, GPIO_PIN_SET);
+    	HAL_Delay(200);
+    	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_15, GPIO_PIN_RESET);
+    }
+
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, data_recv!=0);
   }
   /* USER CODE END 3 */
