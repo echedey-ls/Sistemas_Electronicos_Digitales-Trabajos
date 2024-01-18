@@ -7,7 +7,8 @@ PACKAGE MACHINE_COMMON IS
         CANCELLED,
         BUSY,
         AVAILABLE,
-        FINISHED
+        FINISHED,
+        STARTED_PROD
     );
 
     TYPE ProductType IS (
@@ -40,6 +41,7 @@ PACKAGE BODY MACHINE_COMMON IS
             WHEN BUSY => RETURN "00000001"; -- 0x01
             WHEN AVAILABLE => RETURN "00000010"; -- 0x02
             WHEN FINISHED => RETURN "00000011"; -- 0x03
+            when STARTED_PROD => return "00000100"; -- 0x04
             WHEN OTHERS => RETURN "10000000"; -- 0x80
         END CASE;
     END FUNCTION MachineStatus2Byte;

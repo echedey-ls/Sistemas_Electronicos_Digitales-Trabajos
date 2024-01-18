@@ -180,7 +180,7 @@ BEGIN ----------------------------------------
                     END IF;
                 WHEN PRELAUNCH =>
                     -- In addition to action code, this allows ALWAYS generating a positive pulse on o_status_send
-                    IF o_status = BUSY THEN
+                    IF o_status = STARTED_PROD THEN
                         NEXT_STATE := COUNT_DOWN;
                     END IF;
                 WHEN COUNT_DOWN =>
@@ -220,12 +220,12 @@ BEGIN ----------------------------------------
                     -- Show status on 7-Segments
                     int_PRODUCT_TYPE := i_product_type;
                     -- In addition to transition code, this allows ALWAYS generating a positive pulse on o_status_send
-                    IF o_status = BUSY THEN
+                    IF o_status = STARTED_PROD THEN
                         o_status_send <= '1';
                     END IF;
                     int_timer_load <= '1';
-                    -- Send BUSY code on start
-                    o_status <= BUSY;
+                    -- Send STARTED_PROD code on start
+                    o_status <= STARTED_PROD;
                 WHEN COUNT_DOWN =>
                     -- Heat product, other logic could be implemented here
                     o_HEATER <= '1';
