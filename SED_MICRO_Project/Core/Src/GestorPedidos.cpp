@@ -8,25 +8,21 @@
 #include "GestorPedidos.hpp"
 #include "Pedido.hpp"
 
-GestorPedidos::GestorPedidos(Cafetera* caf1){
+GestorPedidos::GestorPedidos(Cafetera caf1, Cafetera caf2=Cafetera(nullptr), Cafetera caf3=Cafetera(nullptr)){
 	cafetera_vec.push_back(caf1);
-}
-
-GestorPedidos::GestorPedidos(Cafetera* caf1, Cafetera* caf2=nullptr, Cafetera* caf3=nullptr){
-	cafetera_vec.push_back(caf1);
-	if(caf2->getUART_DIR()!= nullptr)cafetera_vec.push_back(caf2);
-	if(caf3->getUART_DIR()!= nullptr)cafetera_vec.push_back(caf3);
+	if(caf2.getUART_DIR()!= nullptr)cafetera_vec.push_back(caf2);
+	if(caf3.getUART_DIR()!= nullptr)cafetera_vec.push_back(caf3);
 }
 
 GestorPedidos::GestorPedidos(UART_HandleTypeDef * caf1, UART_HandleTypeDef * caf2=nullptr, UART_HandleTypeDef * caf3=nullptr){
-	cafetera_vec.push_back(new Cafetera(caf1));
-	if(caf2!=nullptr)cafetera_vec.push_back(new Cafetera(caf2));
-	if(caf3!=nullptr)cafetera_vec.push_back(new Cafetera(caf3));
+	cafetera_vec.push_back(Cafetera(caf1));
+	if(caf2!=nullptr)cafetera_vec.push_back(Cafetera(caf2));
+	if(caf3!=nullptr)cafetera_vec.push_back(Cafetera (caf3));
 }
 
 uint8_t GestorPedidos::huart_p2Cafetera_index(UART_HandleTypeDef * uart_dir){
 	for (uint8_t i=0; i<cafetera_vec.size(); i++){
-		if(uart_dir == cafetera_vec[i]->getUART_DIR()){
+		if(uart_dir == cafetera_vec[i].getUART_DIR()){
 			return i;
 		}
 	}
@@ -67,14 +63,26 @@ uint8_t GestorPedidos::HacerPedido(Pedido* p){
 	}
 
 	uint8_t caf_index;
-	FPGA_TABLE stat;
 	for (uint8_t i=0; i<cafetera_vec.size(); i++){
-		stat = cafetera_vec[i]->getStatus();
-		if((stat == FPGA_TABLE::AVAILABLE)||(stat == FPGA_TABLE::FINISHED)
-				||(stat == FPGA_TABLE::FAULT)){
+		if(cafetera_vec[i].getStatus() == AVAILABLE){
 			caf_index = i;
 			break;
-		} //si no hemos entrado en el if anterior en el último bucle, no hay cafeteras
+		}
+		else if (stat == FPGA_TABLE::UNKNOWN){
+			//si no supiéramo lo que eh, pueh mandamoh el produsto
+			cafetera_vec[caf_index]->Send(Prod2msg(p->getProduct(), p->getTime()));
+			//ehperamoh una miaja
+			HAL_Delay(10);
+			stat = cafetera_vec[i]->getStatus();
+			if(stat == FPGA_TABLE::STARTED){
+				p->setAssignedCaf(caf_index);//le asignamos la primera libre
+				active_orders.push_back(p);
+				return 0;
+			}else if(stat == FPGA_TABLE::BUSY){
+				continue;
+			}
+		}
+		//si no hemos entrado en el if anterior en el último bucle, no hay cafeteras
 		//disponibles, mandaremos mensaje de error
 		else if(i==cafetera_vec.size()-1) caf_index = cafetera_vec.size();
 	}
@@ -88,22 +96,11 @@ uint8_t GestorPedidos::HacerPedido(Pedido* p){
 	else {
 		p->setAssignedCaf(caf_index);//le asignamos la primera libre
 		active_orders.push_back(p); //añadimos el pedido a los que están siendo atendidos
-	 	cafetera_vec[caf_index]->Send(Prod2msg(p->getProduct(), p->getTime()));
+	 	cafetera_vec[caf_index].Send(Prod2msg(p->getProduct(), p->getTime()));
 	 	return 0;
 	}
 }
 
 uint8_t GestorPedidos::HacerPedido(Pedido_t prod, uint8_t time){
 	return this->HacerPedido(new Pedido(prod, time));
-}
-
-uint8_t GestorPedidos::PedidoFinalizado(uint8_t caf_index){
-	for (uint8_t i=0; i<active_orders.size(); i++){
-		if(caf_index == active_orders[i]->getAssignedCaf()){
-			delete active_orders[i]; //borramos el objeto "pedido" que ya ha sido atendido
-			active_orders.erase(active_orders.begin()+i);//quitamos el pedido que ha sido atendido
-			return i; //return de la posición de pedido quitada
-		}
-	}
-	return active_orders.size();//error
 }

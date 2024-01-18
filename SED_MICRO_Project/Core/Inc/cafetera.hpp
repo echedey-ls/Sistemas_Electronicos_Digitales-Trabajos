@@ -14,17 +14,17 @@
 enum FPGA_TABLE {
 	FAULT = 0x7FU,
 	BUSY = 0x01U,
+	STARTED = 0x04U,
 	AVAILABLE = 0x02U,
 	FINISHED = 0x03U,
-	UNDEF = 0x80U
+	UNKNOWN = 0x00U
 };
 
 class Cafetera{
 	uint8_t status;
 	UART_HandleTypeDef *UART_DIR;
 public:
-	Cafetera(UART_HandleTypeDef * uart_dir):UART_DIR(uart_dir){}
-	void init(){
+	Cafetera(UART_HandleTypeDef * uart_dir):UART_DIR(uart_dir){
 		HAL_UART_Receive_DMA(UART_DIR, &status, 1);
 	}
 	void Send(uint8_t msg){HAL_UART_Transmit(UART_DIR, &msg, 1, 5);}
@@ -45,11 +45,11 @@ public:
 		case FINISHED:
 			return FINISHED;
 			break;
-		case UNDEF:
-			return UNDEF;
+		case UNKNOWN:
+			return UNKNOWN;
 			break;
 		default:
-			return UNDEF;
+			return UNKNOWN;
 			break;
 		}
 	}
