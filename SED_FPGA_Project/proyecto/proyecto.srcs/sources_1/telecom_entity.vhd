@@ -31,6 +31,9 @@ END ENTITY COMMUNICATION_ENTITY;
 ARCHITECTURE comms_ent_arch OF COMMUNICATION_ENTITY IS
     --! Edge detector for i_status_send
     COMPONENT EDGEDTCTR IS
+        GENERIC (
+            REG_LENGTH : POSITIVE := 1
+        );
         PORT (
             CLK, RST_N : IN STD_ULOGIC;
             SYNC_IN : IN STD_ULOGIC;

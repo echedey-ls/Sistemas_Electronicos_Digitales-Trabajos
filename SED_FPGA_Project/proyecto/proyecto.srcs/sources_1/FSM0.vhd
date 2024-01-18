@@ -24,7 +24,7 @@ ENTITY FSM0 IS
         i_product_type : IN ProductType;
         i8_converted_secs : IN BYTE;
 
-        o_status : OUT MachineStatus;
+        o_status : INOUT MachineStatus;
         o_status_send : OUT STD_ULOGIC;
         -- DISPLAY OUTPUT
         o8_REMAINING_SECS : OUT STD_ULOGIC_VECTOR(7 DOWNTO 0);
@@ -91,6 +91,9 @@ ARCHITECTURE arch_fsm OF FSM0 IS
 
     --! Buttons Edge Detector
     COMPONENT EDGEDTCTR IS
+        GENERIC (
+            REG_LENGTH : POSITIVE := 1
+        );
         PORT (
             CLK, RST_N : IN STD_ULOGIC;
             SYNC_IN : IN STD_ULOGIC;
@@ -154,6 +157,15 @@ BEGIN ----------------------------------------
     BEGIN
         IF i_RESET_N = '0' THEN
             CURRENT_STATE := ENTRY_POINT;
+            NEXT_STATE := ENTRY_POINT;
+
+            --! Reset internal and external output variables
+            o_HEATER <= '0';
+            int_timer_load <= '0';
+            int_timer_clear <= '0';
+            Do_countdown <= '0';
+            o_status_send <= '0';
+            int_PRODUCT_TYPE := DASHES;
         ELSIF rising_edge(i_CLK) THEN
             --! Transition & and save current state for the next cycle
             CURRENT_STATE := NEXT_STATE;
@@ -167,7 +179,10 @@ BEGIN ----------------------------------------
                         NEXT_STATE := PRELAUNCH;
                     END IF;
                 WHEN PRELAUNCH =>
-                    NEXT_STATE := COUNT_DOWN;
+                    -- In addition to action code, this allows ALWAYS generating a positive pulse on o_status_send
+                    IF o_status = BUSY THEN
+                        NEXT_STATE := COUNT_DOWN;
+                    END IF;
                 WHEN COUNT_DOWN =>
                     IF int_timer_finished = '1' THEN
                         NEXT_STATE := ORDER_FINISHED;
@@ -202,11 +217,14 @@ BEGIN ----------------------------------------
                     o_status <= AVAILABLE;
                     o_status_send <= '1';
                 WHEN PRELAUNCH =>
-                    int_timer_load <= '1';
                     -- Show status on 7-Segments
                     int_PRODUCT_TYPE := i_product_type;
+                    -- In addition to transition code, this allows ALWAYS generating a positive pulse on o_status_send
+                    IF o_status = BUSY THEN
+                        o_status_send <= '1';
+                    END IF;
+                    int_timer_load <= '1';
                     -- Send BUSY code on start
-                    o_status_send <= '1';
                     o_status <= BUSY;
                 WHEN COUNT_DOWN =>
                     -- Heat product, other logic could be implemented here

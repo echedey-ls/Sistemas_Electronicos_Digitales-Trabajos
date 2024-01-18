@@ -40,7 +40,7 @@ ARCHITECTURE Behavioral OF TOP IS
             i_product_type : IN ProductType;
             i8_converted_secs : IN BYTE;
 
-            o_status : OUT MachineStatus;
+            o_status : INOUT MachineStatus;
             o_status_send : OUT STD_ULOGIC;
             -- DISPLAY OUTPUT
             o8_REMAINING_SECS : OUT STD_ULOGIC_VECTOR(7 DOWNTO 0);
