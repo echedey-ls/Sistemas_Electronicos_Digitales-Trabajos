@@ -14,9 +14,10 @@
 enum FPGA_TABLE {
 	FAULT = 0x7FU,
 	BUSY = 0x01U,
+	STARTED = 0x04U,
 	AVAILABLE = 0x02U,
 	FINISHED = 0x03U,
-	UNDEF = 0x80U
+	UNKNOWN = 0x00U
 };
 
 class Cafetera{
@@ -44,11 +45,11 @@ public:
 		case FINISHED:
 			return FINISHED;
 			break;
-		case UNDEF:
-			return UNDEF;
+		case UNKNOWN:
+			return UNKNOWN;
 			break;
 		default:
-			return UNDEF;
+			return UNKNOWN;
 			break;
 		}
 	}

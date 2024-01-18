@@ -50,14 +50,8 @@ UART_HandleTypeDef huart4;
 DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
-enum class FPGA_STATUS {
-	FAULT = 0x7F,
-	BUSY = 0x01,
-	AVAILABLE = 0x02,
-	FINISHED = 0x03,
-	UNDEF = 0x80
-};
-FPGA_STATUS fpga_status_h4 = FPGA_STATUS::UNDEF;
+
+FPGA_TABLE fpga_status_h4 = FPGA_TABLE::UNKNOWN;
 
 enum class MCU_STATES{
 	IDLE,
@@ -135,6 +129,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   lcd_init ();
+  lcd_clear();
   lcd_put_cur(0, 0);
   lcd_send_string("STARTUP...");
   HAL_Delay(5000);
@@ -354,6 +349,10 @@ void f_idle(){
 		state = MCU_STATES::SELECT;
 		lcd_clear();
 	}
+	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+		state = MCU_STATES::ERR;
+		lcd_clear();
+	}
 }
 
 void f_select(){
@@ -390,19 +389,29 @@ void f_select(){
 		break;
 	}
 
+	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+		state = MCU_STATES::ERR;
+		lcd_clear();
+	}
+
 }
 
 void f_confirm(){
 	lcd_put_cur(0, 0);
 	lcd_send_string(coffee);
 	lcd_put_cur(1, 0);
-	lcd_send_string("CONFIRMA CON A");
+	lcd_send_string("YES: A   NO: B");
 	char conf = pads[getKey()];
 	if(conf == 'A'){
 		state = MCU_STATES::BUSY;
 		lcd_clear();
 	}else if(conf == 'B'){
 		state = MCU_STATES::SELECT;
+		lcd_clear();
+	}
+
+	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
 }
@@ -414,8 +423,8 @@ void f_busy(){
 	lcd_put_cur(0, 0);
 	lcd_send_string("PREPARANDO...");
 	lcd_put_cur(1, 0);
-	lcd_send_string("ESPERE UN POCO");
-
+	lcd_send_string("CANCELAR: D");
+	HAL_Delay(200);
 	/* Falta
 	 * Interrupción de FPGA
 	 * para cambiar a DONE
@@ -423,10 +432,35 @@ void f_busy(){
 	 */
 	//No hay interrupción, tendremos que acceder a GestorPedidos y la caf correspondiente
 
-	HAL_Delay(10000); //Quitar
-	state = MCU_STATES::DONE;     //Quitar
-
+	while(1){
+		if(pads[getKey()] == 'D'){
+				state = MCU_STATES::IDLE;
+				Gestor.CancelarPedido(0);
+				Gestor.PedidoFinalizado(0);
+				lcd_clear();
+		}
+		switch(Gestor.getStatus(0)){
+		case FPGA_TABLE::FINISHED:
+			state = MCU_STATES::DONE;
+		break;
+		case FPGA_TABLE::BUSY:
+			break;
+		case FPGA_TABLE::FAULT://caso cancelar
+					break;
+		default:
+			state = MCU_STATES::ERR;
+			break;
+		}
+		if (state!=MCU_STATES::BUSY) break;
+	}
 	lcd_clear();
+	/*if(Gestor.getStatus(0) == FPGA_TABLE::FINISHED){
+		state = MCU_STATES::DONE;
+		lcd_clear();
+	} else if(Gestor.getStatus(0) != FPGA_TABLE::BUSY){
+		state = MCU_STATES::ERR;
+		lcd_clear();
+	}*/
 }
 
 void f_done(){
@@ -438,6 +472,44 @@ void f_done(){
 		state = MCU_STATES::IDLE;
 		lcd_clear();
 	}
+
+	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+		state = MCU_STATES::ERR;
+		lcd_clear();
+	}
+
+	Gestor.PedidoFinalizado(0);
+
+}
+
+
+
+void f_temp(){
+
+	static char num = '1';
+
+	lcd_put_cur(0, 0);
+	lcd_send_string(coffee);
+	lcd_put_cur(1, 0);
+	lcd_send_string("Calor: ");
+	num = pads[getKey()];
+
+	if((num >= 49) && (num <= 53)){
+		temp = num;
+		dTemp[0] = num;
+		lcd_send_string(dTemp);
+		time = (num - 48)*t2t;
+	}
+	if(num == 'A'){
+		state = MCU_STATES::CONFIRM;
+		lcd_clear();
+	}
+
+	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+		state = MCU_STATES::ERR;
+		lcd_clear();
+	}
+
 }
 
 void f_error(){
