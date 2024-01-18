@@ -18,28 +18,36 @@ ENTITY TOP IS
     CONSTANT c_UART_FREQ : POSITIVE := 10_000; -- Hz
     CONSTANT c_7SEGMENTS_FREQ : POSITIVE := 2_000; -- Hz, refresh rate of each of the 7 segments
     CONSTANT c_USED_SEGMENTS : POSITIVE := 8;
+    CONSTANT c_USED_LEDS : POSITIVE := 2;
 END TOP;
 
 ARCHITECTURE Behavioral OF TOP IS
     --! Logic Manager
     COMPONENT FSM0 IS
         GENERIC (
-            g_CLK_FREQ : POSITIVE := 100_000_000;
-            g_UART_FREQ : POSITIVE := 10_000
+            g_CLK_FREQ : POSITIVE := 100_000_000
         );
         PORT (
-            i_CLK : IN STD_LOGIC;
-            i_RESET_N : IN STD_LOGIC;
-            i_CANCEL_BTN : IN STD_LOGIC;
-            i_SERIAL_IN : IN STD_LOGIC;
-            o_SERIAL_OUT : OUT STD_LOGIC;
-            o_RX_BRK_LED : OUT STD_LOGIC;
-            o_HEATER : OUT STD_LOGIC;
-            o8_REMAINING_SECS : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-            o_PRODUCT_STR : OUT ProductType;
-            oo_UART_DBG : OUT STD_LOGIC_VECTOR
+            i_CLK : IN STD_ULOGIC;
+            i_RESET_N : IN STD_ULOGIC;
+
+            i_CANCEL_BTN : IN STD_ULOGIC;
+            o_HEATER : OUT STD_ULOGIC;
+            -- UART TELECOMS IO
+            i_cmd_received : IN STD_ULOGIC;
+            i_cmd_cancel : IN STD_ULOGIC;
+            i_cmd_product : IN STD_ULOGIC;
+            i_product_type : IN ProductType;
+            i8_converted_secs : IN BYTE;
+
+            o_status : INOUT MachineStatus;
+            o_status_send : OUT STD_ULOGIC;
+            -- DISPLAY OUTPUT
+            o8_REMAINING_SECS : OUT STD_ULOGIC_VECTOR(7 DOWNTO 0);
+            o_PRODUCT_STR : OUT ProductType
         );
     END COMPONENT FSM0;
+
     --! HID Manager
     COMPONENT SEGMENTS_MANAGER IS
         GENERIC (
@@ -57,6 +65,40 @@ ARCHITECTURE Behavioral OF TOP IS
         );
     END COMPONENT SEGMENTS_MANAGER;
 
+    --!
+    COMPONENT COMMUNICATION_ENTITY IS
+        GENERIC (
+            g_CLK_FREQ : POSITIVE := 100_000_000;
+            g_UART_FREQ : POSITIVE := 10_000
+        );
+        PORT (
+            i_CLK : IN STD_ULOGIC;
+            i_RESET_N : IN STD_ULOGIC;
+
+            i_serial_rx : IN STD_ULOGIC;
+            o_serial_tx : OUT STD_ULOGIC;
+
+            i_status : IN MachineStatus;
+            i_status_send : IN STD_ULOGIC;
+
+            o_cmd_received : OUT STD_ULOGIC;
+            o_cmd_cancel : INOUT STD_ULOGIC;
+            o_cmd_product : OUT STD_ULOGIC;
+            o_product_type : OUT ProductType;
+            o8_converted_secs : OUT BYTE; -- Input BYTE 6 MSBs + 3 secs; 2 LSBs mean the type of product
+            o_RX_brk : OUT STD_ULOGIC
+        );
+    END COMPONENT COMMUNICATION_ENTITY;
+    -- Signals
+    SIGNAL int_status : MachineStatus := AVAILABLE;
+    SIGNAL int_status_send : STD_ULOGIC := '0';
+
+    SIGNAL int_cmd_received : STD_ULOGIC := '0';
+    SIGNAL int_cmd_cancel : STD_ULOGIC := '0';
+    SIGNAL int_cmd_product : STD_ULOGIC := '0';
+    SIGNAL int_product_type : ProductType := NONE;
+    SIGNAL int8_converted_secs : BYTE;
+
     --! Syncronizer for the button(s)
     COMPONENT SYNCHRNZR IS
         PORT (
@@ -68,9 +110,9 @@ ARCHITECTURE Behavioral OF TOP IS
 
     --! Intermediate signals
     -- Remaining seconds of timer FSM --> 7-Segments Manager
-    SIGNAL REMAINING_SECS : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
+    SIGNAL int_remaining_time : STD_LOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
     -- Type of product
-    SIGNAL PRODUCT_TYPE : ProductType;
+    SIGNAL int_product_type_string : ProductType;
     -- CANCEL Button / Synced signal & Edge
     SIGNAL CANCEL_BTN_LEVEL : STD_LOGIC := '0';
 BEGIN
@@ -84,20 +126,26 @@ BEGIN
 
     Inst00_FSM0 : FSM0
     GENERIC MAP(
-        g_CLK_FREQ => c_CLK_FREQ,
-        g_UART_FREQ => c_UART_FREQ
+        g_CLK_FREQ => c_CLK_FREQ
     )
     PORT MAP(
         i_CLK => CLK100MHZ,
         i_RESET_N => CPU_RESETN,
+
         i_CANCEL_BTN => CANCEL_BTN_LEVEL,
-        i_SERIAL_IN => SERIAL_IN,
-        o_SERIAL_OUT => SERIAL_OUT,
-        o_RX_BRK_LED => LED(14),
         o_HEATER => LED(15),
-        o8_REMAINING_SECS => REMAINING_SECS,
-        o_PRODUCT_STR => PRODUCT_TYPE,
-        oo_UART_DBG => LED(13 DOWNTO 0)
+        -- UART TELECOMS IO
+        i_cmd_received => int_cmd_received,
+        i_cmd_cancel => int_cmd_cancel,
+        i_cmd_product => int_cmd_product,
+        i_product_type => int_product_type,
+        i8_converted_secs => int8_converted_secs,
+
+        o_status => int_status,
+        o_status_send => int_status_send,
+        -- DISPLAY OUTPUT
+        o8_REMAINING_SECS => int_remaining_time,
+        o_PRODUCT_STR => int_product_type_string
     );
 
     Inst00_Segments_Manager : SEGMENTS_MANAGER
@@ -109,14 +157,42 @@ BEGIN
     PORT MAP(
         i_CLK => CLK100MHZ,
         i_RESET_N => CPU_RESETN,
-        i8_REMAINING_SECS => REMAINING_SECS,
-        i_PRODUCT_TYPE => PRODUCT_TYPE,
+        i8_REMAINING_SECS => int_remaining_time,
+        i_PRODUCT_TYPE => int_product_type_string,
         o7_DIGIT_SEGMENTS => DIGIT_SEGMENTS,
         o8_DIGIT_DISABLE => DIGIT_DISABLE(c_USED_SEGMENTS - 1 DOWNTO 0)
     );
+
+    Inst00_comms_entity : COMMUNICATION_ENTITY
+    GENERIC MAP(
+        g_CLK_FREQ => c_CLK_FREQ,
+        g_UART_FREQ => c_UART_FREQ
+    )
+    PORT MAP(
+        i_CLK => CLK100MHZ,
+        i_RESET_N => CPU_RESETN,
+
+        i_serial_rx => SERIAL_IN,
+        o_serial_tx => SERIAL_OUT,
+
+        i_status => int_status,
+        i_status_send => int_status_send,
+        o_cmd_received => int_cmd_received,
+        o_cmd_cancel => int_cmd_cancel,
+        o_cmd_product => int_cmd_product,
+        o_product_type => int_product_type,
+        o8_converted_secs => int8_converted_secs,
+        o_RX_brk => LED(14)
+    );
+
     -- Deactivate unused 7-segments
     disable_unused_digits : IF c_USED_SEGMENTS < 8 GENERATE
         DIGIT_DISABLE(DIGIT_DISABLE'HIGH DOWNTO c_USED_SEGMENTS) <= (OTHERS => '1');
     END GENERATE disable_unused_digits;
+
+    -- Turn off unused LEDS
+    disable_unused_leds : IF c_USED_LEDS < 16 GENERATE
+        LED(LED'high - c_USED_LEDS DOWNTO 0) <= (OTHERS => '0');
+    END GENERATE disable_unused_leds;
 
 END ARCHITECTURE Behavioral;
