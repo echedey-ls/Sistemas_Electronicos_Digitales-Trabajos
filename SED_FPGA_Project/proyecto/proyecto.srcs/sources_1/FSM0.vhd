@@ -102,7 +102,10 @@ ARCHITECTURE arch_fsm OF FSM0 IS
     END COMPONENT EDGEDTCTR;
     -- Signals
     SIGNAL CANCEL_BTN_EDGE : STD_ULOGIC := '0';
+
+    SIGNAL int_RESET : STD_ULOGIC := '1';
 BEGIN ----------------------------------------
+    int_RESET <= NOT i_RESET_N;
     --! Countdown timer instantiation
     Inst00_CountDown : e20_updown_cntr
     GENERIC MAP(
@@ -126,7 +129,7 @@ BEGIN ----------------------------------------
         MODULE => g_CLK_FREQ
     )
     PORT MAP(
-        RESET => NOT i_RESET_N,
+        RESET => int_RESET,
         CLK => i_CLK,
         CE_IN => Do_countdown,
         CE_OUT => int_timer_enable

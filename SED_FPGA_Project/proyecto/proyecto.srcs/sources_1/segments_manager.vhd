@@ -87,7 +87,10 @@ ARCHITECTURE rtl OF SEGMENTS_MANAGER IS
 
     SIGNAL segments_codes_vector : segments_bus_vector(g_USED_SEGMENTS - 1 DOWNTO 0);
     SIGNAL enabled_digit : NATURAL RANGE 0 TO g_USED_SEGMENTS - 1 := 1;
+
+    SIGNAL int_RESET : STD_ULOGIC := '1';
 BEGIN
+    int_RESET <= NOT i_RESET_N;
     Inst00_binary_to_bcd : binary_to_bcd
     GENERIC MAP(
         bits => 8,
@@ -107,7 +110,7 @@ BEGIN
         MODULE => g_CLK_FREQ / g_REFRESH_RATE
     )
     PORT MAP(
-        RESET => NOT i_RESET_N,
+        RESET => int_RESET,
         CLK => i_CLK,
         CE_IN => '1',
         CE_OUT => next_segment_pulse
@@ -159,23 +162,24 @@ BEGIN
                 led => segments_codes_vector(index)
             );
         ELSIF index = 3 GENERATE
-            segments_codes_vector(index) <= (OTHERS => '1');
-        ELSE GENERATE
-            Inst0i_char2seg : char_decoder
-            PORT MAP(
-                code => char_array(index - 4),
-                led => segments_codes_vector(index)
-            );
-        END GENERATE if_gen_segments;
-    END GENERATE;
+                segments_codes_vector(index) <= (OTHERS => '1');
+            ELSE
+                GENERATE
+                    Inst0i_char2seg : char_decoder
+                    PORT MAP(
+                        code => char_array(index - 4),
+                        led => segments_codes_vector(index)
+                    );
+                END GENERATE if_gen_segments;
+            END GENERATE;
 
-    -- Get product enum type
-    Inst00_Prod2Chars : ProductType2Chars
-    PORT MAP(
-        prod => i_PRODUCT_TYPE,
-        code0 => char_array(0),
-        code1 => char_array(1),
-        code2 => char_array(2),
-        code3 => char_array(3)
-    );
-END ARCHITECTURE rtl;
+            -- Get product enum type
+            Inst00_Prod2Chars : ProductType2Chars
+            PORT MAP(
+                prod => i_PRODUCT_TYPE,
+                code0 => char_array(0),
+                code1 => char_array(1),
+                code2 => char_array(2),
+                code3 => char_array(3)
+            );
+        END ARCHITECTURE rtl;
