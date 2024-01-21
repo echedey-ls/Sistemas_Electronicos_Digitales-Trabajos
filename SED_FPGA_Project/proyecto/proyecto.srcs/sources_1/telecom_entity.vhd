@@ -73,7 +73,10 @@ ARCHITECTURE comms_ent_arch OF COMMUNICATION_ENTITY IS
 
     SIGNAL int_RCV_CMD_LSBs : STD_ULOGIC_VECTOR(1 DOWNTO 0) := "00";
     SIGNAL int_RCV_CMD_MSBs : STD_ULOGIC_VECTOR(int_UART_RX_DATA'HIGH DOWNTO 2) := (OTHERS => '0');
+
+    SIGNAL int_RESET : STD_ULOGIC := '1';
 BEGIN
+    int_RESET <= NOT i_RESET_N;
     --! Edge detector, send data pulse
     Inst00_UART_TX_REQ_PULSE : EDGEDTCTR
     PORT MAP(
@@ -92,7 +95,7 @@ BEGIN
     )
     PORT MAP(
         clk => i_CLK,
-        reset => NOT i_RESET_N,
+        reset => int_RESET,
 
         rxd => i_serial_rx,
         txd => o_serial_tx,
