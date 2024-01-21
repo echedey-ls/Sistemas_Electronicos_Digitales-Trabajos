@@ -24,6 +24,7 @@
 #include "GestorPedidos.hpp"
 #include "cafetera.hpp"
 #include "Pedido.hpp"
+#include "characters.h"
 
 #include <cstring>
 #include <stdlib.h>
@@ -145,6 +146,15 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   lcd_init ();
+
+  //Guardar caracteres custom en el lcd
+  lcd_send_cmd(0x40);
+  for (int i=0; i<8; i++) lcd_send_data(tick[i]);
+
+  lcd_send_cmd(0x40+8);
+  for (int i=0; i<8; i++) lcd_send_data(eks[i]);
+
+
   lcd_put_cur(0, 0);
   lcd_send_string("STARTUP...");
   HAL_Delay(5000);
@@ -439,7 +449,12 @@ void f_confirm(){
 	lcd_send_string("   ");
 	lcd_send_string(dTemp);
 	lcd_put_cur(1, 0);
-	lcd_send_string("YES: A   NO: B");
+	//lcd_send_string("YES: A   NO: B");
+	lcd_send_data(0); //caracter tick (en posición 0x40 + 0*8)
+	lcd_send_string(": A   ");
+	lcd_send_data(1); //caracter eks (en posición 0x40 + 1*8)
+	lcd_send_string(": B");
+
 	char conf = pads[getKey()];
 	if(conf == 'A'){
 		state = MCU_STATES::BUSY;
@@ -475,7 +490,7 @@ void f_busy(){
 	while(1){
 			if(pads[getKey()] == 'D'){
 					state = MCU_STATES::CANCEL;
-					Gestor.CancelarPedido(0);
+					//Gestor.CancelarPedido(0);
 					Gestor.PedidoFinalizado(0);
 			}
 			switch(Gestor.getStatus(0)){
@@ -488,12 +503,12 @@ void f_busy(){
 				break;
 			case FPGA_TABLE::FAULT://caso cancelar
 				state = MCU_STATES::CANCEL;
-				Gestor.CancelarPedido(0);
+				//Gestor.CancelarPedido(0);
 				Gestor.PedidoFinalizado(0);
 			break;
 			default:
 				state = MCU_STATES::ERR;
-				Gestor.CancelarPedido(0);
+				//Gestor.CancelarPedido(0);
 				Gestor.PedidoFinalizado(0);
 				break;
 			}
