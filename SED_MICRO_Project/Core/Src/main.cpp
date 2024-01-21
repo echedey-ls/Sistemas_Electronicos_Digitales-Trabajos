@@ -26,6 +26,7 @@
 #include "Pedido.hpp"
 
 #include <cstring>
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,11 +52,12 @@ DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
 
-FPGA_TABLE fpga_status_h4 = FPGA_TABLE::UNKNOWN;
+FPGA_TABLE fpga_status_h4 = FPGA_TABLE::UNDEF;
 
 enum class MCU_STATES{
 	IDLE,
 	SELECT,
+	TEMP,
 	CONFIRM,
 	BUSY,
 	DONE,
@@ -69,6 +71,7 @@ void f_select();
 void f_confirm();
 void f_busy();
 void f_done();
+void f_temp();
 void f_error();
 
 //uint8_t FPGA_STATUS;
@@ -90,6 +93,16 @@ int row=0;
 int col=0;
 
 char coffee[20];
+Cafetera c(&huart4);
+GestorPedidos Gestor(&c);
+
+Pedido_t cafe;
+
+uint8_t time = 20; //tiempo por defecto
+char temp = '1'; //Nivel de temperatura por defecto
+char dTemp[] = {'1', '\0'}; //Para mostrar nivel de temperatura
+
+uint8_t t2t = 20; //Constante de conversión de nivel de temperatura a tiempo
 
 /* USER CODE END 0 */
 
@@ -101,7 +114,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	//Al crear la cafetera se pone ya a escuchar con DMA por &huart4
-	GestorPedidos Gestor(Cafetera(&huart4));
+
 	//HAL_UART_Receive_DMA(&huart4, &fpga_status_h4, 1);
   /* USER CODE END 1 */
 
@@ -126,10 +139,10 @@ int main(void)
   MX_DMA_Init();
   MX_I2C1_Init();
   MX_UART4_Init();
+  Gestor.init(0);
   /* USER CODE BEGIN 2 */
 
   lcd_init ();
-  lcd_clear();
   lcd_put_cur(0, 0);
   lcd_send_string("STARTUP...");
   HAL_Delay(5000);
@@ -140,7 +153,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+	  
 	  //This call is non blocking and should be called when we want to
 	  //start updating FPGA_STATUS
     /* USER CODE END WHILE */
@@ -154,6 +167,9 @@ int main(void)
 	  	  case MCU_STATES::SELECT:
 	  		  f_select();
 	  		  break;
+	  	  case MCU_STATES::TEMP:
+	  		f_temp();
+	  		   break;
 	  	  case MCU_STATES::CONFIRM:
 	  		  f_confirm();
 	  		  break;
@@ -338,9 +354,19 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+/*enum FPGA_TABLE {
+	FAULT = 0x7FU,
+	BUSY = 0x01U,
+	AVAILABLE = 0x02U,
+	FINISHED = 0x03U,
+	UNDEF = 0x80U
+};*/
+
 /*Funciones Máquina de Estado*/
 /*Funciones Máquina de Estado*/
 void f_idle(){
+
 	lcd_put_cur(0, 0);
 	lcd_send_string("PRESIONE UN BOTON");
 	lcd_put_cur(1, 0);
@@ -349,13 +375,14 @@ void f_idle(){
 		state = MCU_STATES::SELECT;
 		lcd_clear();
 	}
-	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
 }
 
 void f_select(){
+
 	static int sel;
 	sel = getKey();
 	static char cof;
@@ -367,29 +394,33 @@ void f_select(){
 	switch(cof){
 	case '1':
 		strcpy(coffee, "Cafe");
-		state = MCU_STATES::CONFIRM;
+		cafe = Pedido_t::CAFE;
+		state = MCU_STATES::TEMP;
 		lcd_clear();
 		break;
 	case '2':
 		strcpy(coffee, "Leche");
-		state = MCU_STATES::CONFIRM;
+		cafe = Pedido_t::LECHE;
+		state = MCU_STATES::TEMP;
 		lcd_clear();
 		break;
 	case '3':
 		strcpy(coffee, "Te");
-		state = MCU_STATES::CONFIRM;
+		cafe = Pedido_t::TE;
+		state = MCU_STATES::TEMP;
 		lcd_clear();
 		break;
 	case '4':
 		strcpy(coffee, "Chocolate");
-		state = MCU_STATES::CONFIRM;
+		cafe = Pedido_t::CHOCOLATE;
+		state = MCU_STATES::TEMP;
 		lcd_clear();
 		break;
 	default:
 		break;
 	}
 
-	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
@@ -397,10 +428,13 @@ void f_select(){
 }
 
 void f_confirm(){
+
 	lcd_put_cur(0, 0);
 	lcd_send_string(coffee);
+	lcd_send_string("   ");
+	lcd_send_string(dTemp);
 	lcd_put_cur(1, 0);
-	lcd_send_string("YES: A   NO: B");
+	lcd_send_string("CONFIRMA CON A");
 	char conf = pads[getKey()];
 	if(conf == 'A'){
 		state = MCU_STATES::BUSY;
@@ -410,60 +444,41 @@ void f_confirm(){
 		lcd_clear();
 	}
 
-	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
 }
 
 void f_busy(){
+
 	//Falta enviar datos a FPGA
-	//Gestor.HacerPedido()
+	if(Gestor.HacerPedido(cafe, time) != 0) state = MCU_STATES::ERR;
 
 	lcd_put_cur(0, 0);
 	lcd_send_string("PREPARANDO...");
 	lcd_put_cur(1, 0);
-	lcd_send_string("CANCELAR: D");
-	HAL_Delay(200);
+	lcd_send_string("ESPERE UN POCO");
+
 	/* Falta
 	 * Interrupción de FPGA
 	 * para cambiar a DONE
 	 * (o a ERR)
 	 */
 	//No hay interrupción, tendremos que acceder a GestorPedidos y la caf correspondiente
-
-	while(1){
-		if(pads[getKey()] == 'D'){
-				state = MCU_STATES::IDLE;
-				Gestor.CancelarPedido(0);
-				Gestor.PedidoFinalizado(0);
-				lcd_clear();
-		}
-		switch(Gestor.getStatus(0)){
-		case FPGA_TABLE::FINISHED:
-			state = MCU_STATES::DONE;
-		break;
-		case FPGA_TABLE::BUSY:
-			break;
-		case FPGA_TABLE::FAULT://caso cancelar
-					break;
-		default:
-			state = MCU_STATES::ERR;
-			break;
-		}
-		if (state!=MCU_STATES::BUSY) break;
-	}
-	lcd_clear();
-	/*if(Gestor.getStatus(0) == FPGA_TABLE::FINISHED){
+	if(Gestor.getStatus(0) == FPGA_TABLE::FINISHED){
 		state = MCU_STATES::DONE;
 		lcd_clear();
 	} else if(Gestor.getStatus(0) != FPGA_TABLE::BUSY){
 		state = MCU_STATES::ERR;
 		lcd_clear();
-	}*/
+	}
+
+
 }
 
 void f_done(){
+
 	lcd_put_cur(0, 0);
 	lcd_send_string("LISTO! PUEDE");
 	lcd_put_cur(1, 0);
@@ -473,7 +488,7 @@ void f_done(){
 		lcd_clear();
 	}
 
-	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+	if(Gestor.getStatus(0) != FPGA_TABLE::FINISHED){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
@@ -505,7 +520,7 @@ void f_temp(){
 		lcd_clear();
 	}
 
-	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
+	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
@@ -513,7 +528,16 @@ void f_temp(){
 }
 
 void f_error(){
-	//FALTA
+
+	lcd_put_cur(0, 0);
+	lcd_send_string("ERROR!");
+	lcd_put_cur(1, 0);
+	lcd_send_string("PULSE D");
+	if(pads[getKey()] == 'D'){
+		state = MCU_STATES::IDLE;
+		lcd_clear();
+	}
+
 }
 
 
