@@ -380,7 +380,7 @@ void f_idle(){
 		state = MCU_STATES::SELECT;
 		lcd_clear();
 	}
-	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
+	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
@@ -484,6 +484,8 @@ void f_busy(){
 			break;
 			case FPGA_TABLE::BUSY:
 				break;
+			case FPGA_TABLE::STARTED:
+				break;
 			case FPGA_TABLE::FAULT://caso cancelar
 				state = MCU_STATES::CANCEL;
 				Gestor.CancelarPedido(0);
@@ -526,8 +528,8 @@ void f_done(){
 		state = MCU_STATES::IDLE;
 		lcd_clear();
 	}
-
-	if(Gestor.getStatus(0) != FPGA_TABLE::FINISHED){
+	//se puede cancelar desde FPGA
+	if(Gestor.getStatus(0) != FPGA_TABLE::FINISHED&&Gestor.getStatus(0) != FPGA_TABLE::FAULT){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
