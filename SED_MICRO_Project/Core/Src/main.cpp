@@ -60,6 +60,7 @@ enum class MCU_STATES{
 	TEMP,
 	CONFIRM,
 	BUSY,
+	CANCEL,
 	DONE,
 	ERR
 };
@@ -70,6 +71,7 @@ void f_idle();
 void f_select();
 void f_confirm();
 void f_busy();
+void f_cancel();
 void f_done();
 void f_temp();
 void f_error();
@@ -175,6 +177,9 @@ int main(void)
 	  		  break;
 	  	  case MCU_STATES::BUSY:
 	  		  f_busy();
+	  		  break;
+	  	case MCU_STATES::CANCEL:
+	  		  f_cancel();
 	  		  break;
 	  	  case MCU_STATES::DONE:
 	  		  f_done();
@@ -420,7 +425,7 @@ void f_select(){
 		break;
 	}
 
-	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
+	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
@@ -434,7 +439,7 @@ void f_confirm(){
 	lcd_send_string("   ");
 	lcd_send_string(dTemp);
 	lcd_put_cur(1, 0);
-	lcd_send_string("CONFIRMA CON A");
+	lcd_send_string("YES: A   NO: B");
 	char conf = pads[getKey()];
 	if(conf == 'A'){
 		state = MCU_STATES::BUSY;
@@ -444,7 +449,7 @@ void f_confirm(){
 		lcd_clear();
 	}
 
-	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
+	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
@@ -458,7 +463,8 @@ void f_busy(){
 	lcd_put_cur(0, 0);
 	lcd_send_string("PREPARANDO...");
 	lcd_put_cur(1, 0);
-	lcd_send_string("ESPERE UN POCO");
+	lcd_send_string("CANCELAR: D");
+	HAL_Delay(200);
 
 	/* Falta
 	 * Interrupción de FPGA
@@ -466,13 +472,46 @@ void f_busy(){
 	 * (o a ERR)
 	 */
 	//No hay interrupción, tendremos que acceder a GestorPedidos y la caf correspondiente
-	if(Gestor.getStatus(0) == FPGA_TABLE::FINISHED){
+	while(1){
+			if(pads[getKey()] == 'D'){
+					state = MCU_STATES::CANCEL;
+					Gestor.CancelarPedido(0);
+					Gestor.PedidoFinalizado(0);
+			}
+			switch(Gestor.getStatus(0)){
+			case FPGA_TABLE::FINISHED:
+				state = MCU_STATES::DONE;
+			break;
+			case FPGA_TABLE::BUSY:
+				break;
+			case FPGA_TABLE::FAULT://caso cancelar
+				state = MCU_STATES::CANCEL;
+				Gestor.CancelarPedido(0);
+				Gestor.PedidoFinalizado(0);
+			break;
+			default:
+				state = MCU_STATES::ERR;
+				Gestor.CancelarPedido(0);
+				Gestor.PedidoFinalizado(0);
+				break;
+			}
+			if (state!=MCU_STATES::BUSY) break;//salida while
+	}
+	lcd_clear();
+		/*if(Gestor.getStatus(0) == FPGA_TABLE::FINISHED){
+			state = MCU_STATES::DONE;
+			lcd_clear();
+		} else if(Gestor.getStatus(0) != FPGA_TABLE::BUSY){
+			state = MCU_STATES::ERR;
+			lcd_clear();
+
+	/*if(Gestor.getStatus(0) == FPGA_TABLE::FINISHED){
 		state = MCU_STATES::DONE;
 		lcd_clear();
-	} else if(Gestor.getStatus(0) != FPGA_TABLE::BUSY){
+	} else if(Gestor.getStatus(0) != FPGA_TABLE::BUSY||Gestor.getStatus(0) != FPGA_TABLE::STARTED){
 		state = MCU_STATES::ERR;
 		lcd_clear();
-	}
+	}*/
 
 
 }
@@ -520,7 +559,7 @@ void f_temp(){
 		lcd_clear();
 	}
 
-	if(Gestor.getStatus(0) != FPGA_TABLE::AVAILABLE){
+	if(Gestor.getStatus(0) == FPGA_TABLE::BUSY||Gestor.getStatus(0) == FPGA_TABLE::STARTED){
 		state = MCU_STATES::ERR;
 		lcd_clear();
 	}
@@ -540,6 +579,16 @@ void f_error(){
 
 }
 
+void f_cancel(){
+	lcd_put_cur(0, 0);
+	lcd_send_string("CANCELADO");
+	lcd_put_cur(1, 0);
+	lcd_send_string("PULSE D");
+	if(pads[getKey()] == 'D'){
+		state = MCU_STATES::IDLE;
+		lcd_clear();
+	}
+}
 
 /* USER CODE END 4 */
 
