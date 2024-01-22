@@ -1,0 +1,11 @@
+# compile vhdl design source files
+vhdl2008 xil_defaultlib  \
+"../../../../proyecto.srcs/sources_1/telecom_codes.vhd" \
+"../../../../proyecto.srcs/sources_1/FSM0.vhd" \
+"../../../../proyecto.srcs/sources_1/e20_updown_cntr.vhd" \
+"../../../../proyecto.srcs/sources_1/e21_fdivider.vhd" \
+"../../../../proyecto.srcs/sources_1/edge_detector.vhd" \
+"../../../../proyecto.srcs/tb_FSM0/imports/proyecto.sim/tb_FSM0.vhd" \
+
+# Do not sort compile order
+nosort

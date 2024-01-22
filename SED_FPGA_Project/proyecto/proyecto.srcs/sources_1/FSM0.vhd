@@ -103,20 +103,27 @@ ARCHITECTURE arch_fsm OF FSM0 IS
     -- Signals
     SIGNAL CANCEL_BTN_EDGE : STD_ULOGIC := '0';
 
+    -- Intermediate signal to suppress warnings
     SIGNAL int_RESET : STD_ULOGIC := '1';
+    SIGNAL int_CountDown_RST_N : STD_ULOGIC := '1';
+    SIGNAL int_timer_enable_N : STD_ULOGIC := '1';
+    SIGNAL int_timer_load_N : STD_ULOGIC := '1';
 BEGIN ----------------------------------------
     int_RESET <= NOT i_RESET_N;
     --! Countdown timer instantiation
+    int_CountDown_RST_N <= i_RESET_N AND NOT int_timer_clear;
+    int_timer_enable_N <= NOT int_timer_enable;
+    int_timer_load_N <= NOT int_timer_load;
     Inst00_CountDown : e20_updown_cntr
     GENERIC MAP(
         WIDTH => 8
     )
     PORT MAP(
-        CLR_N => i_RESET_N AND NOT int_timer_clear,
+        CLR_N => int_CountDown_RST_N,
         CLK => i_CLK,
         UP => '0',
-        CE_N => NOT int_timer_enable,
-        LOAD_N => NOT int_timer_load,
+        CE_N => int_timer_enable_N,
+        LOAD_N => int_timer_load_N,
         J => i8_converted_secs,
         ZERO_N => int_timer_not_zero,
         Q => int_timer_remaining -- Output
@@ -235,7 +242,7 @@ BEGIN ----------------------------------------
                     -- in this case, simulation via a 1-Hz counter
                     Do_countdown <= '1';
                     -- Send BUSY code if another product is requested
-                    IF int_RX_CMD_Product THEN
+                    IF int_RX_CMD_Product = '1' and int_RX_CMD_Cancel = '0' THEN
                         o_status_send <= '1';
                         o_status <= BUSY;
                     END IF;
@@ -254,9 +261,9 @@ BEGIN ----------------------------------------
                     NULL;
             END CASE;
 
-            --! Output assignments
-            o_PRODUCT_STR <= int_PRODUCT_TYPE;
         END IF;
+        --! Output assignments
+        o_PRODUCT_STR <= int_PRODUCT_TYPE;
     END PROCESS fsm_main_proc;
     --! END OF STATE MACHINE !--
     ----------------------------
