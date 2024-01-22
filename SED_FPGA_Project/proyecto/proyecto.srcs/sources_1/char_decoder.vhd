@@ -1,27 +1,27 @@
-LIBRARY ieee;
-USE IEEE.STD_LOGIC_1164.ALL;
+library ieee;
+use IEEE.STD_LOGIC_1164.all;
 
-ENTITY char_decoder IS
-    PORT (
-        code : IN STD_ULOGIC_VECTOR(3 DOWNTO 0);
-        led : OUT STD_ULOGIC_VECTOR(6 DOWNTO 0)
-    );
-END ENTITY char_decoder;
+entity char_decoder is
+    port (
+        code : in  std_ulogic_vector(3 downto 0);
+        led  : out std_ulogic_vector(6 downto 0)
+        );
+end entity char_decoder;
 
-ARCHITECTURE dataflow OF char_decoder IS
-BEGIN
-    WITH code SELECT led <=
-        "1111111" WHEN "0000", -- Nothing
-        "0001000" WHEN "0001", -- 'A'
-        "0110001" WHEN "0010", -- 'C'
-        "0110000" WHEN "0011", -- 'E'
-        "0111000" WHEN "0100", -- 'F'
-        "1001000" WHEN "0101", -- 'H'
-        "1110001" WHEN "0110", -- 'L'
-        "0000001" WHEN "0111", -- 'O'
-        "0011000" WHEN "1000", -- 'P'
-        "0100100" WHEN "1001", -- 'S'
-        "1110000" WHEN "1010", -- 't'
-        "1111110" WHEN "1111", -- '-'
-        "1111111" WHEN OTHERS;
-END ARCHITECTURE dataflow;
+architecture dataflow of char_decoder is
+begin
+    with code select led <=
+        "1111111" when "0000",          -- Nothing
+        "0001000" when "0001",          -- 'A'
+        "0110001" when "0010",          -- 'C'
+        "0110000" when "0011",          -- 'E'
+        "0111000" when "0100",          -- 'F'
+        "1001000" when "0101",          -- 'H'
+        "1110001" when "0110",          -- 'L'
+        "0000001" when "0111",          -- 'O'
+        "0011000" when "1000",          -- 'P'
+        "0100100" when "1001",          -- 'S'
+        "1110000" when "1010",          -- 't'
+        "1111110" when "1111",          -- '-'
+        "1111111" when others;
+end architecture dataflow;

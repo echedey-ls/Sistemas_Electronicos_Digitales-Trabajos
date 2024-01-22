@@ -1,69 +1,69 @@
-LIBRARY ieee;
-USE ieee.std_logic_1164.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
 
-ENTITY EDGEDTCTR_tb IS
-END EDGEDTCTR_tb;
+entity EDGEDTCTR_tb is
+end EDGEDTCTR_tb;
 
-ARCHITECTURE tb OF EDGEDTCTR_tb IS
+architecture tb of EDGEDTCTR_tb is
 
-    COMPONENT EDGEDTCTR IS
-        GENERIC (
-            REG_LENGTH : POSITIVE := 1
-        );
-        PORT (
-            CLK : IN STD_ULOGIC;
-            RST_N : IN STD_ULOGIC;
-            SYNC_IN : IN STD_ULOGIC;
-            EDGE : OUT STD_ULOGIC);
-    END COMPONENT;
+    component EDGEDTCTR is
+        generic (
+            REG_LENGTH : positive := 1
+            );
+        port (
+            CLK     : in  std_ulogic;
+            RST_N   : in  std_ulogic;
+            SYNC_IN : in  std_ulogic;
+            EDGE    : out std_ulogic);
+    end component;
 
-    SIGNAL CLK : STD_ULOGIC;
-    SIGNAL RST_N : STD_ULOGIC;
-    SIGNAL SYNC_IN : STD_ULOGIC;
-    SIGNAL EDGE : STD_ULOGIC;
+    signal CLK     : std_ulogic;
+    signal RST_N   : std_ulogic;
+    signal SYNC_IN : std_ulogic;
+    signal EDGE    : std_ulogic;
 
-    SIGNAL TbSYNC : STD_LOGIC := '0';
-    SIGNAL TbSimEnded : STD_LOGIC := '0';
-    CONSTANT c_CLK_FREQ : POSITIVE := 100_000_000;
-    CONSTANT c_CLK_PERIOD : TIME := 1 sec / c_CLK_FREQ; -- 10 ns
-    CONSTANT c_UART_FREQ : POSITIVE := 10_000_000;
-    CONSTANT c_UART_PERIOD : TIME := 1 sec / c_UART_FREQ; -- 100 ns
+    signal TbSYNC          : std_logic := '0';
+    signal TbSimEnded      : std_logic := '0';
+    constant c_CLK_FREQ    : positive  := 100_000_000;
+    constant c_CLK_PERIOD  : time      := 1 sec / c_CLK_FREQ;   -- 10 ns
+    constant c_UART_FREQ   : positive  := 10_000_000;
+    constant c_UART_PERIOD : time      := 1 sec / c_UART_FREQ;  -- 100 ns
 
-BEGIN
+begin
 
     dut : EDGEDTCTR
-    PORT MAP(
-        CLK => CLK,
-        RST_N => RST_N,
-        SYNC_IN => SYNC_IN,
-        EDGE => EDGE);
+        port map(
+            CLK     => CLK,
+            RST_N   => RST_N,
+            SYNC_IN => SYNC_IN,
+            EDGE    => EDGE);
 
     -- Clock generation
-    CLK <= NOT CLK AFTER c_CLK_PERIOD/2;
+    CLK <= not CLK after c_CLK_PERIOD/2;
 
     -- SYNC stimuli
-    TbSYNC <= NOT TbSYNC AFTER c_CLK_PERIOD * 4 + c_CLK_PERIOD * 7 / 13;  -- async input
+    TbSYNC <= not TbSYNC after c_CLK_PERIOD * 4 + c_CLK_PERIOD * 7 / 13;  -- async input
 
     SYNC_IN <= TbSYNC;
 
-    stimuli : PROCESS
-    BEGIN
+    stimuli : process
+    begin
 
         -- Reset generation
         RST_N <= '0';
-        WAIT FOR c_CLK_PERIOD * 10;
+        wait for c_CLK_PERIOD * 10;
         RST_N <= '1';
-        WAIT FOR c_CLK_PERIOD;
-        ASSERT EDGE = '0' REPORT "[TEST]: Unexpected Edge 1";
+        wait for c_CLK_PERIOD;
+        assert EDGE = '0' report "[TEST]: Unexpected Edge 1";
 
-        WAIT UNTIL TbSYNC = '1';
-        ASSERT EDGE = '0' REPORT "[TEST]: Unexpected Edge 2";
-        WAIT UNTIL CLK = '1';
-        ASSERT EDGE = '1' REPORT "[TEST]: Edge OK";
+        wait until TbSYNC = '1';
+        assert EDGE = '0' report "[TEST]: Unexpected Edge 2";
+        wait until CLK = '1';
+        assert EDGE = '1' report "[TEST]: Edge OK";
 
-        WAIT FOR c_CLK_PERIOD;
-        ASSERT EDGE = '0' REPORT "[TEST]: Unexpected Edge 3";
-        WAIT;
-    END PROCESS;
+        wait for c_CLK_PERIOD;
+        assert EDGE = '0' report "[TEST]: Unexpected Edge 3";
+        wait;
+    end process;
 
-END tb;
+end tb;

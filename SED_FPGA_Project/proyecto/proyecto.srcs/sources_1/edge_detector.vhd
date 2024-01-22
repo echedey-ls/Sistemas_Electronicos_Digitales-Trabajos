@@ -1,29 +1,29 @@
-LIBRARY IEEE;
-USE IEEE.STD_LOGIC_1164.ALL;
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
 
-ENTITY EDGEDTCTR IS
-    GENERIC (
-        REG_LENGTH : POSITIVE := 1
-    );
-    PORT (
-        CLK, RST_N : IN STD_ULOGIC;
-        SYNC_IN : IN STD_ULOGIC;
-        EDGE : OUT STD_ULOGIC
-    );
-END EDGEDTCTR;
+entity EDGEDTCTR is
+    generic (
+        REG_LENGTH : positive := 1
+        );
+    port (
+        CLK, RST_N : in  std_ulogic;
+        SYNC_IN    : in  std_ulogic;
+        EDGE       : out std_ulogic
+        );
+end EDGEDTCTR;
 
-ARCHITECTURE BEHAVIORAL OF EDGEDTCTR IS
-    SIGNAL sreg : STD_ULOGIC_VECTOR(REG_LENGTH DOWNTO 0);
-BEGIN
-    PROCESS (CLK, RST_N)
-    BEGIN
-        IF RST_N = '0' THEN
-            sreg <= (OTHERS => '0');
-        ELSIF rising_edge(CLK) THEN
-            sreg <= sreg(REG_LENGTH - 1 DOWNTO 0) & SYNC_IN;
-        END IF;
-    END PROCESS;
+architecture BEHAVIORAL of EDGEDTCTR is
+    signal sreg : std_ulogic_vector(REG_LENGTH downto 0);
+begin
+    process (CLK, RST_N)
+    begin
+        if RST_N = '0' then
+            sreg <= (others => '0');
+        elsif rising_edge(CLK) then
+            sreg <= sreg(REG_LENGTH - 1 downto 0) & SYNC_IN;
+        end if;
+    end process;
     EDGE <=
-        '1' WHEN sreg = (REG_LENGTH - 1 DOWNTO 0 => '0') & '1' ELSE
+        '1' when sreg = (REG_LENGTH - 1 downto 0 => '0') & '1' else
         '0';
-END BEHAVIORAL;
+end BEHAVIORAL;

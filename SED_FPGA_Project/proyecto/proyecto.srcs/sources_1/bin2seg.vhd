@@ -1,26 +1,26 @@
-LIBRARY ieee;
-USE IEEE.STD_LOGIC_1164.ALL;
+library ieee;
+use IEEE.STD_LOGIC_1164.all;
 
-ENTITY decoder IS
-    PORT (
-        code : IN STD_ULOGIC_VECTOR(3 DOWNTO 0);
-        led : OUT STD_ULOGIC_VECTOR(6 DOWNTO 0)
-    );
-END ENTITY decoder;
+entity decoder is
+    port (
+        code : in  std_ulogic_vector(3 downto 0);
+        led  : out std_ulogic_vector(6 downto 0)
+        );
+end entity decoder;
 
-ARCHITECTURE dataflow OF decoder IS
-BEGIN
-    WITH code SELECT
+architecture dataflow of decoder is
+begin
+    with code select
         led <=
-        "0000001" WHEN "0000", -- 0
-        "1001111" WHEN "0001",
-        "0010010" WHEN "0010",
-        "0000110" WHEN "0011",
-        "1001100" WHEN "0100",
-        "0100100" WHEN "0101",
-        "0100000" WHEN "0110",
-        "0001111" WHEN "0111",
-        "0000000" WHEN "1000",
-        "0000100" WHEN "1001", -- 9
-        "1111110" WHEN OTHERS;
-END ARCHITECTURE dataflow;
+        "0000001" when "0000",          -- 0
+        "1001111" when "0001",
+        "0010010" when "0010",
+        "0000110" when "0011",
+        "1001100" when "0100",
+        "0100100" when "0101",
+        "0100000" when "0110",
+        "0001111" when "0111",
+        "0000000" when "1000",
+        "0000100" when "1001",          -- 9
+        "1111110" when others;
+end architecture dataflow;

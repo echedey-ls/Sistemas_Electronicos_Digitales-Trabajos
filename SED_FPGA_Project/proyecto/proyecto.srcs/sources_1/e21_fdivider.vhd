@@ -1,42 +1,42 @@
-LIBRARY IEEE;
-USE IEEE.STD_LOGIC_1164.ALL;
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
 
-ENTITY e21_fdivider IS
-  GENERIC (
-    MODULE : POSITIVE := 16
-  );
-  PORT (
-    RESET : IN STD_ULOGIC;
-    CLK : IN STD_ULOGIC;
-    CE_IN : IN STD_ULOGIC;
-    CE_OUT : OUT STD_ULOGIC
-  );
-END e21_fdivider;
+entity e21_fdivider is
+    generic (
+        MODULE : positive := 16
+        );
+    port (
+        RESET  : in  std_ulogic;
+        CLK    : in  std_ulogic;
+        CE_IN  : in  std_ulogic;
+        CE_OUT : out std_ulogic
+        );
+end e21_fdivider;
 
-ARCHITECTURE behavioral OF e21_fdivider IS
+architecture behavioral of e21_fdivider is
 
-BEGIN
-  PROCESS (RESET, CLK)
-    SUBTYPE count_range IS INTEGER RANGE 0 TO module - 1;
-    VARIABLE count : count_range;
-  BEGIN
-    IF RESET = '1' THEN
-      count := count_range'high;
-      CE_OUT <= '0';
-    ELSIF rising_edge(CLK) THEN
-      CE_OUT <= '0';
-      IF CE_IN = '1' THEN
-        IF count /= 0 THEN
-          count := count - 1;
-        ELSE
-          CE_OUT <= '1';
-          count := count_range'high;
-        END IF;
-      END IF;
-    END IF;
-  END PROCESS;
-END behavioral;
+begin
+    process (RESET, CLK)
+        subtype count_range is integer range 0 to module - 1;
+        variable count : count_range;
+    begin
+        if RESET = '1' then
+            count  := count_range'high;
+            CE_OUT <= '0';
+        elsif rising_edge(CLK) then
+            CE_OUT <= '0';
+            if CE_IN = '1' then
+                if count /= 0 then
+                    count := count - 1;
+                else
+                    CE_OUT <= '1';
+                    count  := count_range'high;
+                end if;
+            end if;
+        end if;
+    end process;
+end behavioral;

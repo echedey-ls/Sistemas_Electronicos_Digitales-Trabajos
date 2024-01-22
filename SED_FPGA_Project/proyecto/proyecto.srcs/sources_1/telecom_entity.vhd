@@ -1,127 +1,127 @@
-LIBRARY IEEE;
-USE IEEE.STD_LOGIC_1164.ALL;
-USE IEEE.numeric_std.ALL;
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+use IEEE.numeric_std.all;
 
-USE WORK.MACHINE_COMMON.ALL;
+use WORK.MACHINE_COMMON.all;
 
-ENTITY COMMUNICATION_ENTITY IS
-    GENERIC (
-        g_CLK_FREQ : POSITIVE := 100_000_000;
-        g_UART_FREQ : POSITIVE := 10_000
-    );
-    PORT (
-        i_CLK : IN STD_ULOGIC;
-        i_RESET_N : IN STD_ULOGIC;
+entity COMMUNICATION_ENTITY is
+    generic (
+        g_CLK_FREQ  : positive := 100_000_000;
+        g_UART_FREQ : positive := 10_000
+        );
+    port (
+        i_CLK     : in std_ulogic;
+        i_RESET_N : in std_ulogic;
 
-        i_serial_rx : IN STD_ULOGIC;
-        o_serial_tx : OUT STD_ULOGIC;
+        i_serial_rx : in  std_ulogic;
+        o_serial_tx : out std_ulogic;
 
-        i_status : IN MachineStatus;
-        i_status_send : IN STD_ULOGIC;
+        i_status      : in MachineStatus;
+        i_status_send : in std_ulogic;
 
-        o_cmd_received : OUT STD_ULOGIC;
-        o_cmd_cancel : INOUT STD_ULOGIC;
-        o_cmd_product : OUT STD_ULOGIC;
-        o_product_type : OUT ProductType;
-        o8_converted_secs : OUT BYTE; -- Input byte 6 MSBs + 3 secs; 2 LSBs mean the type of product
-        o_RX_brk : OUT STD_ULOGIC
-    );
-END ENTITY COMMUNICATION_ENTITY;
+        o_cmd_received    : out   std_ulogic;
+        o_cmd_cancel      : inout std_ulogic;
+        o_cmd_product     : out   std_ulogic;
+        o_product_type    : out   ProductType;
+        o8_converted_secs : out   BYTE;  -- Input byte 6 MSBs + 3 secs; 2 LSBs mean the type of product
+        o_RX_brk          : out   std_ulogic
+        );
+end entity COMMUNICATION_ENTITY;
 
-ARCHITECTURE comms_ent_arch OF COMMUNICATION_ENTITY IS
+architecture comms_ent_arch of COMMUNICATION_ENTITY is
     --! Edge detector for i_status_send
-    COMPONENT EDGEDTCTR IS
-        GENERIC (
-            REG_LENGTH : POSITIVE := 1
-        );
-        PORT (
-            CLK, RST_N : IN STD_ULOGIC;
-            SYNC_IN : IN STD_ULOGIC;
-            EDGE : OUT STD_ULOGIC
-        );
-    END COMPONENT EDGEDTCTR;
+    component EDGEDTCTR is
+        generic (
+            REG_LENGTH : positive := 1
+            );
+        port (
+            CLK, RST_N : in  std_ulogic;
+            SYNC_IN    : in  std_ulogic;
+            EDGE       : out std_ulogic
+            );
+    end component EDGEDTCTR;
 
     --! UART
-    COMPONENT fluart IS -- Credits to https://github.com/marcj71/fluart
-        GENERIC (
-            CLK_FREQ : INTEGER := 50_000_000; -- main frequency (Hz)
-            SER_FREQ : INTEGER := 115200; -- bit rate (bps), any number up to CLK_FREQ / 2
-            BRK_LEN : INTEGER := 10 -- break duration (tx), minimum break duration (rx) in bits
-        );
-        PORT (
-            clk : IN STD_ULOGIC;
-            reset : IN STD_ULOGIC;
+    component fluart is  -- Credits to https://github.com/marcj71/fluart
+        generic (
+            CLK_FREQ : integer := 50_000_000;  -- main frequency (Hz)
+            SER_FREQ : integer := 115200;  -- bit rate (bps), any number up to CLK_FREQ / 2
+            BRK_LEN  : integer := 10  -- break duration (tx), minimum break duration (rx) in bits
+            );
+        port (
+            clk   : in std_ulogic;
+            reset : in std_ulogic;
 
-            rxd : IN STD_ULOGIC;
-            txd : OUT STD_ULOGIC;
+            rxd : in  std_ulogic;
+            txd : out std_ulogic;
 
-            tx_data : IN STD_ULOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
-            tx_req : IN STD_ULOGIC;
-            tx_brk : IN STD_ULOGIC;
-            tx_busy : OUT STD_ULOGIC;
-            tx_end : OUT STD_ULOGIC;
-            rx_data : OUT STD_ULOGIC_VECTOR(7 DOWNTO 0);
-            rx_data_valid : OUT STD_ULOGIC;
-            rx_brk : OUT STD_ULOGIC;
-            rx_err : OUT STD_ULOGIC
-        );
-    END COMPONENT fluart;
+            tx_data       : in  std_ulogic_vector(7 downto 0) := (others => '0');
+            tx_req        : in  std_ulogic;
+            tx_brk        : in  std_ulogic;
+            tx_busy       : out std_ulogic;
+            tx_end        : out std_ulogic;
+            rx_data       : out std_ulogic_vector(7 downto 0);
+            rx_data_valid : out std_ulogic;
+            rx_brk        : out std_ulogic;
+            rx_err        : out std_ulogic
+            );
+    end component fluart;
     -- Signals
-    SIGNAL int_UART_RX_DATA : BYTE := (OTHERS => '0');
-    SIGNAL int_UART_TX_pulse : STD_ULOGIC := '0';
-    SIGNAL int_Send_status_byte : STD_ULOGIC_VECTOR(7 DOWNTO 0) := (OTHERS => '0');
+    signal int_UART_RX_DATA     : BYTE                          := (others => '0');
+    signal int_UART_TX_pulse    : std_ulogic                    := '0';
+    signal int_Send_status_byte : std_ulogic_vector(7 downto 0) := (others => '0');
 
-    SIGNAL int_RCV_CMD_LSBs : STD_ULOGIC_VECTOR(1 DOWNTO 0) := "00";
-    SIGNAL int_RCV_CMD_MSBs : STD_ULOGIC_VECTOR(int_UART_RX_DATA'HIGH DOWNTO 2) := (OTHERS => '0');
+    signal int_RCV_CMD_LSBs : std_ulogic_vector(1 downto 0)                     := "00";
+    signal int_RCV_CMD_MSBs : std_ulogic_vector(int_UART_RX_DATA'high downto 2) := (others => '0');
 
-    SIGNAL int_RESET : STD_ULOGIC := '1';
-BEGIN
-    int_RESET <= NOT i_RESET_N;
+    signal int_RESET : std_ulogic := '1';
+begin
+    int_RESET <= not i_RESET_N;
     --! Edge detector, send data pulse
     Inst00_UART_TX_REQ_PULSE : EDGEDTCTR
-    PORT MAP(
-        CLK => i_CLK,
-        RST_N => i_RESET_N,
-        SYNC_IN => i_status_send,
-        EDGE => int_UART_TX_pulse
-    );
+        port map(
+            CLK     => i_CLK,
+            RST_N   => i_RESET_N,
+            SYNC_IN => i_status_send,
+            EDGE    => int_UART_TX_pulse
+            );
 
     --! UART instantiation
     int_Send_status_byte <= MachineStatus2Byte(i_status);
     Inst00_uart : fluart
-    GENERIC MAP(
-        CLK_FREQ => g_CLK_FREQ,
-        SER_FREQ => g_UART_FREQ
-    )
-    PORT MAP(
-        clk => i_CLK,
-        reset => int_RESET,
+        generic map(
+            CLK_FREQ => g_CLK_FREQ,
+            SER_FREQ => g_UART_FREQ
+            )
+        port map(
+            clk   => i_CLK,
+            reset => int_RESET,
 
-        rxd => i_serial_rx,
-        txd => o_serial_tx,
+            rxd => i_serial_rx,
+            txd => o_serial_tx,
 
-        tx_data => int_Send_status_byte,
-        tx_req => int_UART_TX_pulse,
-        tx_brk => '0',
-        tx_busy => OPEN,
-        tx_end => OPEN,
+            tx_data => int_Send_status_byte,
+            tx_req  => int_UART_TX_pulse,
+            tx_brk  => '0',
+            tx_busy => open,
+            tx_end  => open,
 
-        rx_data => int_UART_RX_DATA,
-        rx_data_valid => o_cmd_received,
-        rx_brk => o_RX_brk,
-        rx_err => OPEN
-    );
-    int_RCV_CMD_LSBs <= int_UART_RX_DATA(int_RCV_CMD_LSBs'HIGH DOWNTO 0);
-    int_RCV_CMD_MSBs <= int_UART_RX_DATA(int_UART_RX_DATA'HIGH DOWNTO int_RCV_CMD_LSBs'HIGH + 1);
-    o_cmd_cancel <= '1' WHEN UNSIGNED(int_UART_RX_DATA) = 255 ELSE
-        '0';
-    o_cmd_product <= NOT o_cmd_cancel;
+            rx_data       => int_UART_RX_DATA,
+            rx_data_valid => o_cmd_received,
+            rx_brk        => o_RX_brk,
+            rx_err        => open
+            );
+    int_RCV_CMD_LSBs <= int_UART_RX_DATA(int_RCV_CMD_LSBs'high downto 0);
+    int_RCV_CMD_MSBs <= int_UART_RX_DATA(int_UART_RX_DATA'high downto int_RCV_CMD_LSBs'high + 1);
+    o_cmd_cancel     <= '1' when unsigned(int_UART_RX_DATA) = 255 else
+                    '0';
+    o_cmd_product     <= not o_cmd_cancel;
     o8_converted_secs <= int_RCV_CMD_MSBs & "11";
     o_product_type <=
-        CANCEL WHEN o_cmd_cancel = '1' ELSE
-        COFFEE WHEN int_RCV_CMD_LSBs = "00" ELSE
-        TEA WHEN int_RCV_CMD_LSBs = "01" ELSE
-        MILK WHEN int_RCV_CMD_LSBs = "10" ELSE
-        CHOCOLAT WHEN int_RCV_CMD_LSBs = "11" ELSE
+        CANCEL   when o_cmd_cancel = '1' else
+        COFFEE   when int_RCV_CMD_LSBs = "00" else
+        TEA      when int_RCV_CMD_LSBs = "01" else
+        MILK     when int_RCV_CMD_LSBs = "10" else
+        CHOCOLAT when int_RCV_CMD_LSBs = "11" else
         NONE;
-END ARCHITECTURE comms_ent_arch;
+end architecture comms_ent_arch;

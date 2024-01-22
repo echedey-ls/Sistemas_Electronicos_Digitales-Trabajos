@@ -20,45 +20,45 @@
 --
 --------------------------------------------------------------------------------
 
-LIBRARY ieee;
-USE IEEE.STD_LOGIC_1164.ALL;
+library ieee;
+use IEEE.STD_LOGIC_1164.all;
 
-ENTITY binary_to_bcd_digit IS
-  PORT(
-    clk     : IN      STD_ULOGIC;                      --system clock
-    reset_n : IN      STD_ULOGIC;                      --active low asynchronous reset
-    ena     : IN      STD_ULOGIC;                      --activate operation
-    binary  : IN      STD_ULOGIC;                      --bit shifted into digit
-    c_out   : BUFFER  STD_ULOGIC;                      --carry out shifted to next larger digit
-    bcd     : BUFFER  STD_ULOGIC_VECTOR(3 DOWNTO 0));  --resulting BCD output
-END binary_to_bcd_digit;
+entity binary_to_bcd_digit is
+    port(
+        clk     : in     std_ulogic;    --system clock
+        reset_n : in     std_ulogic;    --active low asynchronous reset
+        ena     : in     std_ulogic;    --activate operation
+        binary  : in     std_ulogic;    --bit shifted into digit
+        c_out   : buffer std_ulogic;  --carry out shifted to next larger digit
+        bcd     : buffer std_ulogic_vector(3 downto 0));  --resulting BCD output
+end binary_to_bcd_digit;
 
-ARCHITECTURE logic OF binary_to_bcd_digit IS
-  SIGNAL prev_ena : STD_ULOGIC;  --keeps track of the previous enable to identify when enable is first asserted
-BEGIN
+architecture logic of binary_to_bcd_digit is
+    signal prev_ena : std_ulogic;  --keeps track of the previous enable to identify when enable is first asserted
+begin
 
-  c_out <= bcd(3) OR (bcd(2) AND bcd(1)) OR (bcd(2) AND bcd(0)); --assert carry out when register value exceeds 4
+    c_out <= bcd(3) or (bcd(2) and bcd(1)) or (bcd(2) and bcd(0));  --assert carry out when register value exceeds 4
 
-  PROCESS(reset_n, clk)
-  BEGIN
-    IF(reset_n = '0') THEN                --asynchronous reset asserted
-      prev_ena <= '0';                      --clear ena history
-      bcd <= "0000";                        --clear output
-    ELSIF(clk'EVENT AND clk = '1') THEN   --rising edge of system clock
-      prev_ena <= ena;                      --keep track of last enable
-      IF(ena = '1') THEN                    --operation activated
-        IF(prev_ena = '0') THEN               --first cycle of activation
-          bcd <= "0000";                        --initialize the register
-        ELSIF(c_out = '1') THEN               --register value exceeds 4
-          bcd(0) <= binary;                     --shift new bit into first register
-          bcd(1) <= NOT bcd(0);                 --set second register to adjusted value
-          bcd(2) <= NOT (bcd(1) XOR bcd(0));    --set third register to adjusted value
-          bcd(3) <= bcd(3) AND bcd(0);          --set fourth register to adjusted value
-        ELSE                                  --register value does not exceed 4
-          bcd <= bcd(2 DOWNTO 0) & binary;      --shift register values up and shift in new bit
-        END IF;
-      END IF;
-    END IF;
-  END PROCESS;
+    process(reset_n, clk)
+    begin
+        if(reset_n = '0') then          --asynchronous reset asserted
+            prev_ena <= '0';            --clear ena history
+            bcd      <= "0000";         --clear output
+        elsif(clk'event and clk = '1') then       --rising edge of system clock
+            prev_ena <= ena;            --keep track of last enable
+            if(ena = '1') then          --operation activated
+                if(prev_ena = '0') then    --first cycle of activation
+                    bcd <= "0000";      --initialize the register
+                elsif(c_out = '1') then    --register value exceeds 4
+                    bcd(0) <= binary;   --shift new bit into first register
+                    bcd(1) <= not bcd(0);  --set second register to adjusted value
+                    bcd(2) <= not (bcd(1) xor bcd(0));  --set third register to adjusted value
+                    bcd(3) <= bcd(3) and bcd(0);  --set fourth register to adjusted value
+                else                    --register value does not exceed 4
+                    bcd <= bcd(2 downto 0) & binary;  --shift register values up and shift in new bit
+                end if;
+            end if;
+        end if;
+    end process;
 
-END logic;
+end logic;

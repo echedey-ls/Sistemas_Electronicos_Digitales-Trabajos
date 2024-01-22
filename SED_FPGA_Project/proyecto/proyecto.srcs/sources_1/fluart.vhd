@@ -15,251 +15,251 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-LIBRARY ieee;
-USE IEEE.STD_LOGIC_1164.ALL;
-USE ieee.numeric_std.ALL;
+library ieee;
+use IEEE.STD_LOGIC_1164.all;
+use ieee.numeric_std.all;
 
-ENTITY fluart IS
-    GENERIC (
-        CLK_FREQ : INTEGER := 50_000_000; -- main frequency (Hz)
-        SER_FREQ : INTEGER := 115200; -- bit rate (bps), any number up to CLK_FREQ / 2
-        BRK_LEN : INTEGER := 10 -- break duration (tx), minimum break duration (rx) in bits
-    );
-    PORT (
-        clk : IN STD_ULOGIC;
-        reset : IN STD_ULOGIC;
+entity fluart is
+    generic (
+        CLK_FREQ : integer := 50_000_000;  -- main frequency (Hz)
+        SER_FREQ : integer := 115200;  -- bit rate (bps), any number up to CLK_FREQ / 2
+        BRK_LEN  : integer := 10  -- break duration (tx), minimum break duration (rx) in bits
+        );
+    port (
+        clk   : in std_ulogic;
+        reset : in std_ulogic;
 
-        rxd : IN STD_ULOGIC;
-        txd : OUT STD_ULOGIC;
+        rxd : in  std_ulogic;
+        txd : out std_ulogic;
 
-        tx_data : IN STD_ULOGIC_VECTOR(7 DOWNTO 0);
-        tx_req : IN STD_ULOGIC;
-        tx_brk : IN STD_ULOGIC;
-        tx_busy : OUT STD_ULOGIC;
-        tx_end : OUT STD_ULOGIC;
-        rx_data : OUT STD_ULOGIC_VECTOR(7 DOWNTO 0);
-        rx_data_valid : OUT STD_ULOGIC;
-        rx_brk : OUT STD_ULOGIC;
-        rx_err : OUT STD_ULOGIC
-    );
+        tx_data       : in  std_ulogic_vector(7 downto 0);
+        tx_req        : in  std_ulogic;
+        tx_brk        : in  std_ulogic;
+        tx_busy       : out std_ulogic;
+        tx_end        : out std_ulogic;
+        rx_data       : out std_ulogic_vector(7 downto 0);
+        rx_data_valid : out std_ulogic;
+        rx_brk        : out std_ulogic;
+        rx_err        : out std_ulogic
+        );
 
-BEGIN
-    ASSERT BRK_LEN >= 10 REPORT "BRK_LEN must be >= 10" SEVERITY failure;
-END;
-ARCHITECTURE rtl OF fluart IS
+begin
+    assert BRK_LEN >= 10 report "BRK_LEN must be >= 10" severity failure;
+end;
+architecture rtl of fluart is
 
-    TYPE state IS (idle, start, data, stop1, stop2, break);
+    type state is (idle, start, data, stop1, stop2, break);
 
-    CONSTANT CLK_DIV_MAX : NATURAL := CLK_FREQ / SER_FREQ - 1;
+    constant CLK_DIV_MAX : natural := CLK_FREQ / SER_FREQ - 1;
 
-    SIGNAL tx_state : state;
-    SIGNAL tx_clk_div : INTEGER RANGE 0 TO CLK_DIV_MAX;
-    SIGNAL tx_data_tmp : STD_ULOGIC_VECTOR(7 DOWNTO 0);
-    SIGNAL tx_bit_cnt : INTEGER RANGE 0 TO BRK_LEN;
+    signal tx_state    : state;
+    signal tx_clk_div  : integer range 0 to CLK_DIV_MAX;
+    signal tx_data_tmp : std_ulogic_vector(7 downto 0);
+    signal tx_bit_cnt  : integer range 0 to BRK_LEN;
 
-    SIGNAL rx_state : state;
-    SIGNAL rxd_d : STD_ULOGIC_VECTOR(3 DOWNTO 0);
-    SIGNAL rx_data_i : STD_ULOGIC_VECTOR(7 DOWNTO 0);
-    SIGNAL rx_clk_div : INTEGER RANGE 0 TO CLK_DIV_MAX;
-    SIGNAL rx_bit_cnt : INTEGER RANGE 0 TO BRK_LEN;
+    signal rx_state   : state;
+    signal rxd_d      : std_ulogic_vector(3 downto 0);
+    signal rx_data_i  : std_ulogic_vector(7 downto 0);
+    signal rx_clk_div : integer range 0 to CLK_DIV_MAX;
+    signal rx_bit_cnt : integer range 0 to BRK_LEN;
 
-BEGIN
+begin
 
-    tx_proc : PROCESS (clk)
-    BEGIN
-        IF rising_edge(clk) THEN
-            IF reset = '1' THEN
-                tx_state <= idle;
-                tx_clk_div <= 0;
-                tx_busy <= '0';
-                tx_end <= '0';
-                txd <= '1';
-                tx_data_tmp <= (OTHERS => '0');
-                tx_bit_cnt <= 0;
+    tx_proc : process (clk)
+    begin
+        if rising_edge(clk) then
+            if reset = '1' then
+                tx_state    <= idle;
+                tx_clk_div  <= 0;
+                tx_busy     <= '0';
+                tx_end      <= '0';
+                txd         <= '1';
+                tx_data_tmp <= (others => '0');
+                tx_bit_cnt  <= 0;
 
-            ELSIF tx_state /= idle AND tx_clk_div /= CLK_DIV_MAX THEN
+            elsif tx_state /= idle and tx_clk_div /= CLK_DIV_MAX then
                 tx_clk_div <= tx_clk_div + 1;
 
                 -- tx_end pulse coincides with last cycle of tx_busy
-                IF (tx_state = stop2 OR (tx_state = break AND tx_bit_cnt = BRK_LEN - 1))
-                    AND tx_clk_div = CLK_DIV_MAX - 1 THEN
+                if (tx_state = stop2 or (tx_state = break and tx_bit_cnt = BRK_LEN - 1))
+                    and tx_clk_div = CLK_DIV_MAX - 1 then
                     tx_end <= '1';
-                END IF;
+                end if;
 
-            ELSE -- tx_state = idle (ready to transmit), or at the end of a bit period
+            else  -- tx_state = idle (ready to transmit), or at the end of a bit period
 
                 -- defaults
                 tx_clk_div <= 0;
-                tx_end <= '0';
+                tx_end     <= '0';
 
-                CASE tx_state IS
-                    WHEN idle =>
-                        IF tx_req = '1' THEN
+                case tx_state is
+                    when idle =>
+                        if tx_req = '1' then
                             -- send start bit
-                            tx_busy <= '1';
-                            txd <= '0';
+                            tx_busy     <= '1';
+                            txd         <= '0';
                             tx_data_tmp <= tx_data;
-                            tx_state <= data;
+                            tx_state    <= data;
+                            tx_bit_cnt  <= 0;
+                        elsif tx_brk = '1' then
+                            tx_busy    <= '1';
+                            txd        <= '0';
+                            tx_state   <= break;
                             tx_bit_cnt <= 0;
-                        ELSIF tx_brk = '1' THEN
-                            tx_busy <= '1';
-                            txd <= '0';
-                            tx_state <= break;
-                            tx_bit_cnt <= 0;
-                        ELSE
+                        else
                             txd <= '1';
-                        END IF;
+                        end if;
 
-                    WHEN data =>
+                    when data =>
                         txd <= tx_data_tmp(0);
 
-                        IF tx_bit_cnt = 7 THEN
+                        if tx_bit_cnt = 7 then
                             tx_state <= stop1;
-                        ELSE
-                            tx_data_tmp <= '0' & tx_data_tmp(7 DOWNTO 1);
-                            tx_bit_cnt <= tx_bit_cnt + 1;
-                        END IF;
+                        else
+                            tx_data_tmp <= '0' & tx_data_tmp(7 downto 1);
+                            tx_bit_cnt  <= tx_bit_cnt + 1;
+                        end if;
 
-                    WHEN stop1 =>
-                        txd <= '1';
+                    when stop1 =>
+                        txd      <= '1';
                         tx_state <= stop2;
 
-                    WHEN stop2 =>
-                        txd <= '1';
+                    when stop2 =>
+                        txd      <= '1';
                         tx_state <= idle;
-                        tx_busy <= '0';
+                        tx_busy  <= '0';
 
-                    WHEN break =>
+                    when break =>
                         txd <= '0';
 
-                        IF tx_bit_cnt = BRK_LEN - 1 THEN
+                        if tx_bit_cnt = BRK_LEN - 1 then
                             tx_state <= idle;
-                            txd <= '1';
-                            tx_busy <= '0';
-                        ELSE
+                            txd      <= '1';
+                            tx_busy  <= '0';
+                        else
                             tx_bit_cnt <= tx_bit_cnt + 1;
-                        END IF;
+                        end if;
 
-                    WHEN OTHERS =>
+                    when others =>
                         tx_state <= idle;
 
-                END CASE;
-            END IF;
-        END IF;
-    END PROCESS;
-    rx_proc : PROCESS (clk)
-    BEGIN
-        IF rising_edge(clk) THEN
-            IF reset = '1' THEN
-                rx_state <= idle;
-                rxd_d <= (OTHERS => '1');
-                rx_data_i <= (OTHERS => '0');
+                end case;
+            end if;
+        end if;
+    end process;
+    rx_proc : process (clk)
+    begin
+        if rising_edge(clk) then
+            if reset = '1' then
+                rx_state      <= idle;
+                rxd_d         <= (others => '1');
+                rx_data_i     <= (others => '0');
                 rx_data_valid <= '0';
-                rx_err <= '0';
-                rx_brk <= '0';
-                rx_clk_div <= 0;
-                rx_bit_cnt <= 0;
+                rx_err        <= '0';
+                rx_brk        <= '0';
+                rx_clk_div    <= 0;
+                rx_bit_cnt    <= 0;
 
-            ELSE
+            else
                 -- double-latching
-                rxd_d <= rxd_d(2 DOWNTO 0) & rxd;
+                rxd_d <= rxd_d(2 downto 0) & rxd;
 
                 -- defaults
                 rx_data_valid <= '0';
-                rx_err <= '0';
-                rx_brk <= '0';
+                rx_err        <= '0';
+                rx_brk        <= '0';
 
-                CASE rx_state IS
-                    WHEN idle =>
-                        IF rxd_d(3) = '1' AND rxd_d(2) = '0' THEN
-                            rx_state <= start;
+                case rx_state is
+                    when idle =>
+                        if rxd_d(3) = '1' and rxd_d(2) = '0' then
+                            rx_state   <= start;
                             rx_clk_div <= 0;
-                        END IF;
+                        end if;
 
-                    WHEN start =>
+                    when start =>
                         -- wait half a bit period
-                        IF rx_clk_div = CLK_DIV_MAX / 2 THEN
+                        if rx_clk_div = CLK_DIV_MAX / 2 then
                             -- rxd still low?
-                            IF rxd_d(2) = '0' THEN
-                                rx_state <= data;
+                            if rxd_d(2) = '0' then
+                                rx_state   <= data;
                                 rx_clk_div <= 0;
                                 rx_bit_cnt <= 0;
-                                rx_data_i <= (OTHERS => '0');
-                            ELSE
+                                rx_data_i  <= (others => '0');
+                            else
                                 -- this was a glitch
-                                rx_state <= idle;
+                                rx_state   <= idle;
                                 rx_clk_div <= 0;
-                            END IF;
-                        ELSE
+                            end if;
+                        else
                             rx_clk_div <= rx_clk_div + 1;
-                        END IF;
+                        end if;
 
-                    WHEN data =>
+                    when data =>
                         -- wait a full bit period
-                        IF rx_clk_div = CLK_DIV_MAX THEN
+                        if rx_clk_div = CLK_DIV_MAX then
                             rx_clk_div <= 0;
                             rx_bit_cnt <= rx_bit_cnt + 1;
-                            rx_data_i <= rxd_d(2) & rx_data_i(7 DOWNTO 1);
+                            rx_data_i  <= rxd_d(2) & rx_data_i(7 downto 1);
 
-                            IF rx_bit_cnt = 7 THEN
+                            if rx_bit_cnt = 7 then
                                 rx_state <= stop1;
-                            END IF;
-                        ELSE
+                            end if;
+                        else
                             rx_clk_div <= rx_clk_div + 1;
-                        END IF;
+                        end if;
 
-                    WHEN stop1 =>
+                    when stop1 =>
                         -- wait a full bit period
-                        IF rx_clk_div = CLK_DIV_MAX THEN
+                        if rx_clk_div = CLK_DIV_MAX then
                             rx_clk_div <= 0;
                             rx_bit_cnt <= rx_bit_cnt + 1;
 
-                            IF rxd_d(2) = '1' THEN
+                            if rxd_d(2) = '1' then
                                 -- valid word received
-                                rx_state <= idle;
+                                rx_state      <= idle;
                                 rx_data_valid <= '1';
 
-                            ELSIF rx_data_i /= x"00" THEN
+                            elsif rx_data_i /= x"00" then
                                 -- non-zero bits received but no stop bit -> framing error
                                 rx_state <= idle;
-                                rx_err <= '1';
+                                rx_err   <= '1';
 
-                            ELSE
+                            else
                                 -- all zeros received, start of break?
                                 rx_state <= break;
 
-                            END IF;
-                        ELSE
+                            end if;
+                        else
                             rx_clk_div <= rx_clk_div + 1;
-                        END IF;
+                        end if;
 
-                    WHEN break =>
-                        IF rx_bit_cnt = BRK_LEN - 1 THEN
+                    when break =>
+                        if rx_bit_cnt = BRK_LEN - 1 then
                             -- proper break received
                             rx_state <= idle;
-                            rx_brk <= '1';
+                            rx_brk   <= '1';
 
-                        ELSIF rxd_d(2) = '1' THEN
+                        elsif rxd_d(2) = '1' then
                             -- now we start checking every sample
                             rx_state <= idle;
-                            rx_err <= '1';
+                            rx_err   <= '1';
 
-                        ELSIF rx_clk_div = CLK_DIV_MAX THEN
+                        elsif rx_clk_div = CLK_DIV_MAX then
                             rx_clk_div <= 0;
                             rx_bit_cnt <= rx_bit_cnt + 1;
 
-                        ELSE
+                        else
                             rx_clk_div <= rx_clk_div + 1;
-                        END IF;
+                        end if;
 
-                    WHEN OTHERS =>
+                    when others =>
                         rx_state <= idle;
 
-                END CASE;
-            END IF;
-        END IF;
-    END PROCESS;
+                end case;
+            end if;
+        end if;
+    end process;
 
     rx_data <= rx_data_i;
 
-END;
+end;
