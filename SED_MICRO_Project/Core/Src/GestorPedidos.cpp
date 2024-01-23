@@ -74,7 +74,22 @@ uint8_t GestorPedidos::HacerPedido(Pedido* p){
 				||(stat == FPGA_TABLE::FAULT)){
 			caf_index = i;
 			break;
-		} //si no hemos entrado en el if anterior en el último bucle, no hay cafeteras
+		}
+		else if (stat == FPGA_TABLE::UNKNOWN||stat == FPGA_TABLE::UNDEF){
+			//si no supiéramo lo que eh, pueh mandamoh el produsto
+			cafetera_vec[caf_index]->Send(Prod2msg(p->getProduct(), p->getTime()));
+			//ehperamoh una miaja
+			HAL_Delay(20);
+			stat = cafetera_vec[i]->getStatus();
+			if(stat == FPGA_TABLE::STARTED){
+				p->setAssignedCaf(caf_index);//le asignamos la primera libre
+				active_orders.push_back(p);
+				return 0;
+			}else if(stat == FPGA_TABLE::BUSY){
+				continue;
+			}
+		}
+				//si no hemos entrado en el if anterior en el último bucle, no hay cafeteras
 		//disponibles, mandaremos mensaje de error
 		else if(i==cafetera_vec.size()-1) caf_index = cafetera_vec.size();
 	}
