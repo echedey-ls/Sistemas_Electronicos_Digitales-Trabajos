@@ -28,6 +28,7 @@ public:
 	uint8_t HacerPedido(Pedido* p);
 	uint8_t HacerPedido(Pedido_t prod, uint8_t time);
 	uint8_t PedidoFinalizado(uint8_t caf_index);
+	void CancelarPedido(uint8_t caf_index){cafetera_vec[caf_index]->Send(0xFF);}//esto es cancelar
 };
 
 

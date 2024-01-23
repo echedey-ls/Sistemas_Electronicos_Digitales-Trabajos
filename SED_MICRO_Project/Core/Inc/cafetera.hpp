@@ -46,9 +46,14 @@ public:
 			break;
 		case FINISHED:
 			return FINISHED;
+		case STARTED:
+			return STARTED;
 			break;
 		case UNDEF:
 			return UNDEF;
+			break;
+		case UNKNOWN:
+			return UNKNOWN;
 			break;
 		default:
 			return UNDEF;

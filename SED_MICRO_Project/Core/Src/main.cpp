@@ -503,12 +503,12 @@ void f_busy(){
 				break;
 			case FPGA_TABLE::FAULT://caso cancelar
 				state = MCU_STATES::CANCEL;
-				//Gestor.CancelarPedido(0);
+				Gestor.CancelarPedido(0);
 				Gestor.PedidoFinalizado(0);
 			break;
 			default:
 				state = MCU_STATES::ERR;
-				//Gestor.CancelarPedido(0);
+				Gestor.CancelarPedido(0);
 				Gestor.PedidoFinalizado(0);
 				break;
 			}
